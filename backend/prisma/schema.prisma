@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int       @id @default(autoincrement())
+  telegramId      BigInt    @unique @map("telegram_id")
+  username        String?
+  firstName       String?   @map("first_name")
+  lastName        String?   @map("last_name")
+  languageCode    String?   @map("language_code")
+  isPremium       Boolean?  @map("is_premium")
+  photoUrl        String?   @map("photo_url")
+  isOrganizer     Boolean   @default(false) @map("is_organizer")
+  balance         Int       @default(0)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  businessCards   BusinessCard[]
+  contacts        Contact[]
+  referrals       Referral[]
+  referredBy      Referral[] @relation("ReferredUsers")
+  events          Event[]
+  eventRegistrations EventRegistration[]
+  referralLogsAsUser    ReferralLog[] @relation("ReferralLogUser")
+  referralLogsAsReferrer ReferralLog[] @relation("ReferralLogReferrer")
+
+  @@map("users")
+}
+
+model BusinessCard {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  contactId   String    @unique @map("contact_id")
+  businessName String?  @map("business_name")
+  resources   String?   @map("resources")
+  personalData String?  @map("personal_data")
+  qrCodeUrl   String?   @map("qr_code_url")
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("business_cards")
+}
+
+model Contact {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  contactId   String    @map("contact_id")
+  businessName String?  @map("business_name")
+  resources   String?
+  personalData String?  @map("personal_data")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contactId])
+  @@map("contacts")
+}
+
+model Referral {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  referrerId  Int       @map("referrer_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referrer    User      @relation("ReferredUsers", fields: [referrerId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, referrerId])
+  @@map("referrals")
+}
+
+model ReferralLog {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  referrerId  Int       @map("referrer_id")
+  action      String
+  points      Int       @default(0)
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade, name: "ReferralLogUser")
+  referrer    User      @relation(fields: [referrerId], references: [id], onDelete: Cascade, name: "ReferralLogReferrer")
+
+  @@map("referral_logs")
+}
+
+model Event {
+  id          Int       @id @default(autoincrement())
+  organizerId Int       @map("organizer_id")
+  title       String
+  description String?
+  location    String?
+  startDate   DateTime  @map("start_date")
+  endDate     DateTime  @map("end_date")
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  organizer   User      @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  registrations EventRegistration[]
+
+  @@map("events")
+}
+
+model EventRegistration {
+  id          Int       @id @default(autoincrement())
+  eventId     Int       @map("event_id")
+  userId      Int       @map("user_id")
+  status      String    @default("pending")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  event       Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@map("event_registrations")
+}
