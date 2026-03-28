@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -61,7 +66,7 @@ export class EventService {
     });
   }
 
-  async findOne(id: number, userId: number) {
+  async findOne(id: number, _userId: number) {
     const event = await this.prisma.event.findUnique({
       where: { id },
       include: {

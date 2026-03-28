@@ -112,7 +112,7 @@ export class ReferralService {
 
   async generateReferralLink(userId: number) {
     const user = await this.userService.findById(userId);
-    
+
     if (!user) {
       throw new Error('User not found');
     }

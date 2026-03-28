@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { MainScreen } from './pages/MainScreen';
@@ -113,9 +113,11 @@ function DebugInfo({ initData }: { initData: string | null }) {
 
 function AppContent() {
   const { user, loading, initAuth, error, clearError } = useAuth();
+  const navigate = useNavigate();
   const [telegramInitData, setTelegramInitData] = useState<string | null>(null);
   const [isTelegram, setIsTelegram] = useState(false);
   const [authAttempted, setAuthAttempted] = useState(false);
+  const [wasLoggedIn, setWasLoggedIn] = useState(false);
 
   useEffect(() => {
     // Проверяем запущено ли приложение в Telegram
@@ -130,8 +132,39 @@ function AppContent() {
       setTelegramInitData(tg.initData);
       tg.ready();
       tg.expand();
+      
+      // Обрабатываем startapp параметр для глубоких ссылок
+      const startParam = tg.initDataUnsafe?.start_param || new URLSearchParams(window.location.search).get('startapp');
+      if (startParam) {
+        console.log('[App] startapp parameter:', startParam);
+        // Навигация будет выполнена после авторизации
+        sessionStorage.setItem('startapp_param', startParam);
+      }
     }
   }, []);
+
+  useEffect(() => {
+    // Навигация после авторизации, если есть startapp параметр
+    if (user) {
+      const startParam = sessionStorage.getItem('startapp_param');
+      if (startParam) {
+        sessionStorage.removeItem('startapp_param');
+        console.log('[App] Navigating to card:', startParam);
+        navigate(`/card/${startParam}`);
+      }
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
+    // Отслеживаем состояние входа/выхода
+    if (user) {
+      setWasLoggedIn(true);
+    }
+    if (wasLoggedIn && !user && !loading) {
+      // Пользователь вышел - перезагружаем страницу
+      window.location.reload();
+    }
+  }, [user, loading, wasLoggedIn]);
 
   useEffect(() => {
     if (telegramInitData && !user && !authAttempted) {

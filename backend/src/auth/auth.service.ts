@@ -15,24 +15,31 @@ export class AuthService {
 
   async validateUser(authDto: AuthDto) {
     const { initData } = authDto;
+    console.log(
+      'Received initData:',
+      initData ? 'present (' + initData.length + ' chars)' : 'empty',
+    );
 
     // Validate Telegram initData
     const isValid = this.validateTelegramData(initData);
+    console.log('InitData valid:', isValid);
 
     if (!isValid) {
+      console.log('Invalid initData content:', initData?.substring(0, 100));
       throw new Error('Invalid Telegram data');
     }
 
     // Parse user data from initData
     const urlParams = new URLSearchParams(initData);
     const userJson = urlParams.get('user');
-    
+
     if (!userJson) {
       throw new Error('No user data in initData');
     }
 
     const userData = JSON.parse(userJson);
     const telegramId = BigInt(userData.id);
+    console.log('Telegram user ID:', telegramId);
 
     // Find or create user
     let user = await this.prisma.user.findUnique({
@@ -51,6 +58,7 @@ export class AuthService {
           photoUrl: userData.photo_url,
         },
       });
+      console.log('Created new user:', user.id);
     }
 
     // Generate JWT token
@@ -79,8 +87,9 @@ export class AuthService {
 
     const urlParams = new URLSearchParams(initData);
     const hash = urlParams.get('hash');
-    
+
     if (!hash) {
+      console.log('No hash in initData');
       return false;
     }
 
@@ -94,10 +103,7 @@ export class AuthService {
       .join('\n');
 
     // Create data check string
-    const dataCheckString = crypto
-      .createHmac('sha256', 'WebAppData')
-      .update(botToken)
-      .digest();
+    const dataCheckString = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest();
 
     // Calculate hash
     const calculatedHash = crypto
@@ -105,10 +111,12 @@ export class AuthService {
       .update(sortedParams)
       .digest('hex');
 
-    return calculatedHash === hash;
+    const isValid = calculatedHash === hash;
+    console.log('Hash validation:', isValid ? 'passed' : 'failed');
+    return isValid;
   }
 
   private async generateToken(userId: number): Promise<string> {
-    return this.jwtService.signAsync({ sub: userId });
+    return this.jwtService.signAsync({ userId });
   }
 }

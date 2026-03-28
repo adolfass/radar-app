@@ -9,19 +9,43 @@ import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class BusinessCardService {
   private frontendUrl: string;
+  private botUsername: string;
 
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
   ) {
     this.frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:5173';
+    this.botUsername = this.configService.get('TELEGRAM_BOT_USERNAME') || 'vizitka_test_bot';
+  }
+
+  private getShareLink(contactId: string): string {
+    return `https://t.me/${this.botUsername}?startapp=${contactId}`;
+  }
+
+  private getWebLink(contactId: string): string {
+    return `${this.frontendUrl}/card/${contactId}`;
   }
 
   async findAll(userId: number) {
-    return this.prisma.businessCard.findMany({
+    const cards = await this.prisma.businessCard.findMany({
       where: { userId, isActive: true },
       orderBy: { createdAt: 'desc' },
     });
+
+    const cardsWithQr = await Promise.all(
+      cards.map(async (card) => {
+        const shareLink = this.getShareLink(card.contactId);
+        const qrCodeDataUrl = await QRCode.toDataURL(shareLink, { width: 200, margin: 2 });
+        return {
+          ...card,
+          shareLink,
+          qrCodeDataUrl,
+        };
+      }),
+    );
+
+    return cardsWithQr;
   }
 
   async findOne(id: number, userId: number) {
@@ -37,7 +61,14 @@ export class BusinessCardService {
       throw new ForbiddenException('Access denied');
     }
 
-    return card;
+    const shareLink = this.getShareLink(card.contactId);
+    const qrCodeDataUrl = await QRCode.toDataURL(shareLink, { width: 200, margin: 2 });
+
+    return {
+      ...card,
+      shareLink,
+      qrCodeDataUrl,
+    };
   }
 
   async findByContactId(contactId: string) {
@@ -61,17 +92,21 @@ export class BusinessCardService {
       throw new NotFoundException('Business card not found');
     }
 
-    return card;
+    return {
+      ...card,
+      user: {
+        ...card.user,
+        telegramId: card.user.telegramId.toString(),
+      },
+    };
   }
 
   async create(userId: number, createDto: CreateBusinessCardDto) {
     const contactId = uuidv4();
-    
-    // Generate QR code URL (in production, save to S3/storage)
-    const qrData = `${this.frontendUrl}/card/${contactId}`;
-    const qrCodeDataUrl = await QRCode.toDataURL(qrData);
-    
-    // For now, we'll store a placeholder. In production, save to S3
+
+    const qrData = this.getShareLink(contactId);
+    await QRCode.toDataURL(qrData);
+
     const qrCodeUrl = `/api/qr/${contactId}`;
 
     return this.prisma.businessCard.create({
@@ -102,8 +137,10 @@ export class BusinessCardService {
 
     const updateData: any = {};
     if (updateDto.businessName !== undefined) updateData.businessName = updateDto.businessName;
-    if (updateDto.resources !== undefined) updateData.resources = JSON.stringify(updateDto.resources);
-    if (updateDto.personalData !== undefined) updateData.personalData = JSON.stringify(updateDto.personalData);
+    if (updateDto.resources !== undefined)
+      updateData.resources = JSON.stringify(updateDto.resources);
+    if (updateDto.personalData !== undefined)
+      updateData.personalData = JSON.stringify(updateDto.personalData);
 
     return this.prisma.businessCard.update({
       where: { id },
@@ -131,6 +168,24 @@ export class BusinessCardService {
   }
 
   async generateReferralLink(userId: number, contactId: string, refUserId: number) {
-    return `${this.frontendUrl}/card/${contactId}?ref_user_id=${refUserId}`;
+    return this.getShareLink(contactId) + `?ref_user_id=${refUserId}`;
+  }
+
+  async generateQrCode(contactId: string) {
+    const card = await this.prisma.businessCard.findUnique({
+      where: { contactId },
+    });
+
+    if (!card || !card.isActive) {
+      throw new NotFoundException('Business card not found');
+    }
+
+    const qrData = this.getShareLink(contactId);
+    const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
+      width: 300,
+      margin: 2,
+    });
+
+    return { qrCodeDataUrl, contactId };
   }
 }

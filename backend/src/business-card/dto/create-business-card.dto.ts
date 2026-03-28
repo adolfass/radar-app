@@ -1,5 +1,5 @@
 import { IsString, IsOptional, IsObject } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateBusinessCardDto {
   @ApiPropertyOptional({ description: 'Название компании/бизнеса' })

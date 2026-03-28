@@ -7,6 +7,9 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Добавляем глобальный префикс /api
+  app.setGlobalPrefix('api');
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -23,7 +26,6 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get('PORT') || 3000;
 
-  // Swagger documentation
   const config = new DocumentBuilder()
     .setTitle('Vizitka API')
     .setDescription('API для Telegram Mini App "Визитка"')

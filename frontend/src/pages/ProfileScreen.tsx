@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useBusinessCards, useReferrals } from '../hooks/useApi';
@@ -7,6 +8,7 @@ export function ProfileScreen() {
   const { user, logout } = useAuth();
   const { cards, deleteCard } = useBusinessCards();
   const { stats, getReferralLink } = useReferrals();
+  const [selectedCard, setSelectedCard] = useState<any>(null);
 
   const handleCopyReferralLink = async () => {
     try {
@@ -304,7 +306,7 @@ export function ProfileScreen() {
                   marginBottom: '8px',
                 }}
               >
-                <div>
+                <div style={{ flex: 1 }}>
                   <p style={{
                     fontSize: '14px',
                     fontWeight: '600',
@@ -320,6 +322,20 @@ export function ProfileScreen() {
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => setSelectedCard(card)}
+                    style={{
+                      padding: '6px 12px',
+                      backgroundColor: 'var(--tg-theme-button-color, #2481cc)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                    }}
+                  >
+                    📋 QR
+                  </button>
                   <button
                     onClick={() => navigate(`/card/${card.id}/edit`)}
                     style={{
@@ -358,6 +374,144 @@ export function ProfileScreen() {
           </div>
         )}
       </div>
+
+      {/* QR Code Modal */}
+      {selectedCard && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+        }}
+        onClick={() => setSelectedCard(null)}
+        >
+          <div style={{
+            backgroundColor: 'var(--tg-theme-bg-color, #f5f5f5)',
+            borderRadius: '16px',
+            padding: '24px',
+            maxWidth: '90%',
+            width: '320px',
+          }}
+          onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{
+              fontSize: '18px',
+              fontWeight: '600',
+              color: 'var(--tg-theme-text-color, #000000)',
+              marginBottom: '16px',
+              textAlign: 'center',
+            }}>
+              {selectedCard.businessName || 'Визитка'}
+            </h3>
+            {selectedCard.qrCodeDataUrl ? (
+              <img 
+                src={selectedCard.qrCodeDataUrl} 
+                alt="QR Code" 
+                style={{ 
+                  width: '200px', 
+                  height: '200px', 
+                  display: 'block', 
+                  margin: '0 auto' 
+                }} 
+              />
+            ) : (
+              <div style={{
+                width: '200px',
+                height: '200px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto',
+                backgroundColor: 'var(--tg-theme-secondary-bg-color, #ffffff)',
+                borderRadius: '8px',
+              }}>
+                <p style={{ color: 'var(--tg-theme-hint-color, #999999)' }}>
+                  QR-код недоступен
+                </p>
+              </div>
+            )}
+            <p style={{
+              fontSize: '12px',
+              color: 'var(--tg-theme-hint-color, #999999)',
+              textAlign: 'center',
+              marginTop: '12px',
+              wordBreak: 'break-all',
+            }}>
+              {selectedCard.shareLink || `https://t.me/vizitka_test_bot?startapp=${selectedCard.contactId}`}
+            </p>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              marginTop: '16px',
+            }}>
+              <button
+                onClick={() => {
+                  const shareLink = selectedCard.shareLink || `https://t.me/vizitka_test_bot?startapp=${selectedCard.contactId}`;
+                  const shareText = `Моя визитка: ${selectedCard.businessName}\n${shareLink}`;
+                  const tg = (window as any).Telegram?.WebApp;
+                  
+                  // Открываем Telegram share dialog
+                  if (tg && tg.openTelegramLink) {
+                    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareLink)}&text=${encodeURIComponent('Моя визитка: ' + selectedCard.businessName)}`;
+                    tg.openTelegramLink(shareUrl);
+                  } else if (tg && tg.switchInlineQuery) {
+                    // Альтернативный метод
+                    tg.switchInlineQuery(shareText, ['users', 'groups', 'channels']);
+                  } else if (navigator.share) {
+                    // Fallback для браузеров
+                    navigator.share({
+                      title: 'Моя визитка',
+                      text: shareText,
+                      url: shareLink,
+                    }).catch(() => {
+                      navigator.clipboard.writeText(shareLink);
+                      alert('Ссылка скопирована!');
+                    });
+                  } else {
+                    navigator.clipboard.writeText(shareLink);
+                    alert('Ссылка скопирована!');
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  backgroundColor: 'var(--tg-theme-button-color, #2481cc)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                }}
+              >
+                📤 Поделиться
+              </button>
+              <button
+                onClick={() => setSelectedCard(null)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  backgroundColor: 'var(--tg-theme-secondary-bg-color, #ffffff)',
+                  color: 'var(--tg-theme-text-color, #000000)',
+                  border: '1px solid var(--tg-theme-hint-color, #e0e0e0)',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                }}
+              >
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Settings */}
       <div style={{
