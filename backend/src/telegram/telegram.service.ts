@@ -34,7 +34,7 @@ export class TelegramService extends Telegraf<Context> implements OnModuleInit {
   private setupBot() {
     this.command('start', async (ctx: any) => {
       await ctx.reply(
-        '👋 Добро пожаловать в Vizitka Bot!\n\n' +
+        '👋 Добро пожаловать в Radar Bot!\n\n' +
           '📇 Создавайте цифровые визитки\n' +
           '🤝 Обменивайтесь контактами через QR-коды\n' +
           '📅 Участвуйте в деловых событиях\n' +
@@ -48,7 +48,7 @@ export class TelegramService extends Telegraf<Context> implements OnModuleInit {
                   text: '🚀 Открыть приложение',
                   web_app: {
                     url:
-                      this.configService.get('FRONTEND_URL') || 'https://vizitka.zazvezdu.online',
+                      this.configService.get('FRONTEND_URL') || 'https://radar.zazvezdu.online',
                   },
                 },
               ],

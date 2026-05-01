@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://vizitka.zazvezdu.online/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://radar.zazvezdu.online/api';
 
 interface User {
   id: number;
@@ -25,7 +25,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  token: localStorage.getItem('vizitka_token'),
+  token: localStorage.getItem('radar_token'),
   loading: false,
   error: null,
   initAuth: async (initData: string) => {
@@ -58,7 +58,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.log('[Auth] Response:', response.status, response.data);
       const { user, token } = response.data;
       
-      localStorage.setItem('vizitka_token', token);
+      localStorage.setItem('radar_token', token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
       set({ user, token, loading: false });
@@ -70,7 +70,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   logout: () => {
-    localStorage.removeItem('vizitka_token');
+    localStorage.removeItem('radar_token');
     delete axios.defaults.headers.common['Authorization'];
     set({ user: null, token: null, error: null });
   },
@@ -80,7 +80,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 }));
 
 // Set initial token if exists
-const token = localStorage.getItem('vizitka_token');
+const token = localStorage.getItem('radar_token');
 if (token) {
   axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   console.log('[Auth] Restored token from localStorage');

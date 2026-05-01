@@ -1,17 +1,17 @@
 module.exports = {
   apps: [
     {
-      name: 'vizitka-backend',
-      cwd: '/var/www/vizitka-bot/backend',
+      name: 'radar-backend',
+      cwd: '/var/www/radar-bot/backend',
       script: 'npm',
       args: 'run start:prod',
       env: {
         NODE_ENV: 'production',
         PORT: '3002',
       },
-      error_file: '/var/log/vizitka-backend-error.log',
-      out_file: '/var/log/vizitka-backend-out.log',
-      log_file: '/var/log/vizitka-backend-combined.log',
+      error_file: '/var/log/radar-backend-error.log',
+      out_file: '/var/log/radar-backend-out.log',
+      log_file: '/var/log/radar-backend-combined.log',
       time: true,
       instances: 1,
       autorestart: true,

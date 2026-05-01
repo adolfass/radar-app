@@ -1,7 +1,7 @@
 {
-  "name": "vizitka-backend",
+  "name": "radar-backend",
   "version": "1.0.0",
-  "description": "NestJS backend for Vizitka Telegram Mini App",
+  "description": "NestJS backend for Radar Telegram Mini App",
   "author": "",
   "private": true,
   "license": "ISC",

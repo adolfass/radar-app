@@ -36,7 +36,7 @@ function TelegramRequired() {
         color: 'var(--tg-theme-hint-color, #999999)',
         lineHeight: '1.5',
       }}>
-        Откройте бота @vizitka_test_bot и нажмите "Открыть приложение"
+        Откройте бота @radar_test_bot и нажмите "Открыть приложение"
       </p>
     </div>
   );

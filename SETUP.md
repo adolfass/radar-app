@@ -1,4 +1,4 @@
-# Инструкция по запуску Vizitka Bot
+# Инструкция по запуску Radar Bot
 
 ## Требования
 
@@ -159,7 +159,7 @@ npm run preview
 ### Backend (.env)
 
 ```env
-DATABASE_URL="postgresql://vizitka:vizitka_password@localhost:5432/vizitka_db?schema=public"
+DATABASE_URL="postgresql://radar:radar_password@localhost:5432/radar_db?schema=public"
 REDIS_HOST=localhost
 REDIS_PORT=6379
 TELEGRAM_BOT_TOKEN=your_bot_token_here

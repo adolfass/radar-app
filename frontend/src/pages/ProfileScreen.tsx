@@ -26,8 +26,8 @@ export function ProfileScreen() {
       
       if (navigator.share) {
         await navigator.share({
-          title: 'Vizitka - Цифровые визитки',
-          text: 'Присоединяйтесь к Vizitka для создания цифровых визиток и делового нетворкинга!',
+          title: 'Radar - Цифровые визитки',
+          text: 'Присоединяйтесь к Radar для создания цифровых визиток и делового нетворкинга!',
           url: response.data.link,
         });
       } else {
@@ -443,7 +443,7 @@ export function ProfileScreen() {
               marginTop: '12px',
               wordBreak: 'break-all',
             }}>
-              {selectedCard.shareLink || `https://t.me/vizitka_test_bot?startapp=${selectedCard.contactId}`}
+              {selectedCard.shareLink || `https://t.me/radar_test_bot?startapp=${selectedCard.contactId}`}
             </p>
             <div style={{
               display: 'flex',
@@ -453,7 +453,7 @@ export function ProfileScreen() {
             }}>
               <button
                 onClick={() => {
-                  const shareLink = selectedCard.shareLink || `https://t.me/vizitka_test_bot?startapp=${selectedCard.contactId}`;
+                  const shareLink = selectedCard.shareLink || `https://t.me/radar_test_bot?startapp=${selectedCard.contactId}`;
                   const shareText = `Моя визитка: ${selectedCard.businessName}\n${shareLink}`;
                   const tg = (window as any).Telegram?.WebApp;
                   

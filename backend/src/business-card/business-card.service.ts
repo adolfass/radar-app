@@ -16,7 +16,7 @@ export class BusinessCardService {
     private configService: ConfigService,
   ) {
     this.frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:5173';
-    this.botUsername = this.configService.get('TELEGRAM_BOT_USERNAME') || 'vizitka_test_bot';
+    this.botUsername = this.configService.get('TELEGRAM_BOT_USERNAME') || 'radar_test_bot';
   }
 
   private getShareLink(contactId: string): string {

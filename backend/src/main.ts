@@ -27,7 +27,7 @@ async function bootstrap() {
   const port = configService.get('PORT') || 3000;
 
   const config = new DocumentBuilder()
-    .setTitle('Vizitka API')
+    .setTitle('Radar API')
     .setDescription('API для Telegram Mini App "Визитка"')
     .setVersion('1.0')
     .addBearerAuth()

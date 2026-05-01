@@ -27,7 +27,7 @@ export function MainScreen() {
             fontWeight: 'bold',
             color: 'var(--tg-theme-text-color, #000000)',
           }}>
-            Vizitka
+            Radar
           </h1>
           <p style={{
             fontSize: '14px',
