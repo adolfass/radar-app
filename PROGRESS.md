@@ -33,6 +33,7 @@
 - [x] **Network Graph** — force-directed visualization
 - [x] **Health Check** — GET /api/health with PostgreSQL connectivity
 - [x] **Logging & Monitoring** — pino (backend), Sentry (frontend)
+- [x] **Neo4j Integration** — graph DB for network analysis (contacts, trust paths)
 - [x] **Unit Tests** — 87 tests, 7 suites (auth, encryption, meeting, ai-classifier, trust, contact, bqg)
 
 #### Frontend — RADAR Screens
@@ -61,7 +62,6 @@
 
 ### ❌ Future
 - AI Service (FastAPI + Celery)
-- Neo4j integration
 - Payment provider (Telegram Stars)
 
 ---
