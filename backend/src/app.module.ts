@@ -17,6 +17,7 @@ import { MeetingModule } from './meeting/meeting.module';
 import { EncryptionModule } from './encryption/encryption.module';
 import { AiClassifierModule } from './ai-classifier/ai-classifier.module';
 import { NetworkGraphModule } from './network-graph/network-graph.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { NetworkGraphModule } from './network-graph/network-graph.module';
     EncryptionModule,
     AiClassifierModule,
     NetworkGraphModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

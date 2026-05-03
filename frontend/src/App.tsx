@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense, lazy } from 'react';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { DashboardRadar } from './pages/DashboardRadar';
 import { QRExchange } from './pages/QRExchange';
@@ -14,10 +14,11 @@ import { CardDetail } from './pages/CardDetail';
 import { EventsScreen } from './pages/EventsScreen';
 import { ContactsScreen } from './pages/ContactsScreen';
 import { AdminPanel } from './pages/AdminPanel';
-import { NetworkInsights } from './pages/NetworkInsights';
-import { NetworkGraph } from './pages/NetworkGraph';
 import { LoadingScreen } from './components/LoadingScreen';
 import { BottomNav } from './components/BottomNav';
+
+const NetworkInsights = lazy(() => import('./pages/NetworkInsights').then(m => ({ default: m.NetworkInsights })));
+const NetworkGraph = lazy(() => import('./pages/NetworkGraph').then(m => ({ default: m.NetworkGraph })));
 
 function TelegramRequired() {
   return (
@@ -117,8 +118,8 @@ function AppRoutes() {
         <Route path="/trust" element={<TrustBalance />} />
         <Route path="/ritual" element={<ReviewRitual />} />
         <Route path="/meetings" element={<MeetingFlow />} />
-        <Route path="/insights" element={<NetworkInsights />} />
-        <Route path="/graph" element={<NetworkGraph />} />
+        <Route path="/insights" element={<Suspense fallback={<LoadingScreen />}><NetworkInsights /></Suspense>} />
+        <Route path="/graph" element={<Suspense fallback={<LoadingScreen />}><NetworkGraph /></Suspense>} />
 
         {/* Legacy */}
         <Route path="/profile" element={<ProfileScreen />} />

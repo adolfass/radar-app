@@ -39,6 +39,8 @@
 - [x] **TrustBalance** — визуальный баланс доверия
 - [x] **ReviewRitual** — ритуал инвентаризации
 - [x] **MeetingFlow** — подготовка → встреча → пост-фиксация
+- [x] **NetworkInsights** — AI аналитика: круги, роли, рекомендации
+- [x] **NetworkGraph** — force-directed граф сети
 - [x] **BottomNav** — нижняя навигация: Радар, QR, Встречи, Контакты, Профиль
 - [x] **OLED theme** — `#000` bg, safe-area, touch targets ≥44px
 
@@ -53,7 +55,6 @@
 ### ⚠️ Remaining
 1. **Partial test coverage** — 42 tests, ~15% overall
 2. **CI/CD secrets not configured** — workflows created, need GitHub secrets
-3. **Network visualization graph** — not built
 
 ### ❌ Future
 - AI Service (FastAPI + Celery)
@@ -75,6 +76,9 @@
 | `/trust` | TrustBalance | Reciprocity |
 | `/ritual` | ReviewRitual | Renewal |
 | `/meetings` | MeetingFlow | Preparation |
+| `/insights` | NetworkInsights | AI Analytics |
+| `/graph` | NetworkGraph | Visualization |
+| `/admin` | AdminPanel | Management |
 | `/profile` | ProfileScreen | Legacy |
 | `/contacts` | ContactsScreen | Legacy |
 | `/events` | EventsScreen | Legacy |
