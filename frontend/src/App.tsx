@@ -14,6 +14,7 @@ import { CardDetail } from './pages/CardDetail';
 import { EventsScreen } from './pages/EventsScreen';
 import { ContactsScreen } from './pages/ContactsScreen';
 import { AdminPanel } from './pages/AdminPanel';
+import { NetworkInsights } from './pages/NetworkInsights';
 import { LoadingScreen } from './components/LoadingScreen';
 import { BottomNav } from './components/BottomNav';
 
@@ -115,6 +116,7 @@ function AppRoutes() {
         <Route path="/trust" element={<TrustBalance />} />
         <Route path="/ritual" element={<ReviewRitual />} />
         <Route path="/meetings" element={<MeetingFlow />} />
+        <Route path="/insights" element={<NetworkInsights />} />
 
         {/* Legacy */}
         <Route path="/profile" element={<ProfileScreen />} />

@@ -15,6 +15,7 @@ import { RitualModule } from './ritual/ritual.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { MeetingModule } from './meeting/meeting.module';
 import { EncryptionModule } from './encryption/encryption.module';
+import { AiClassifierModule } from './ai-classifier/ai-classifier.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { EncryptionModule } from './encryption/encryption.module';
     SubscriptionModule,
     MeetingModule,
     EncryptionModule,
+    AiClassifierModule,
   ],
 })
 export class AppModule {}

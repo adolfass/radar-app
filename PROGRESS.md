@@ -29,6 +29,7 @@
 - [x] **Subscription** — free/premium, trial, limits
 - [x] **Meeting** — preparation → meeting → post-fixation
 - [x] **Encryption** — AES-256-GCM for ОИС privateMeta
+- [x] **AI Classifier** — heuristic-based contact classification (circles, roles, recommendations)
 
 #### Frontend — RADAR Screens
 - [x] **DashboardRadar** — главная: обзор сети, круги, BQG, quick actions
@@ -50,11 +51,10 @@
 | **Обновление** | ✅ Ritual (health) | ✅ ReviewRitual | ✅ Done |
 
 ### ⚠️ Remaining
-1. **Partial test coverage** — 33 tests, 12% overall (auth 96%, encryption 92%, meeting 100%)
+1. **Partial test coverage** — 42 tests, ~15% overall (auth 96%, encryption 92%, meeting 100%, ai-classifier 100%)
 2. **CI/CD secrets not configured** — workflows created, need GitHub secrets
-3. **AI classification** — contact roles, circles, recommendations
-4. **Admin Panel "Users" tab** — placeholder
-5. **Network visualization graph** — not built
+3. **Admin Panel "Users" tab** — placeholder
+4. **Network visualization graph** — not built
 
 ### ❌ Future
 - AI Service (FastAPI + Celery)
