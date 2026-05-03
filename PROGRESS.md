@@ -51,10 +51,9 @@
 | **Обновление** | ✅ Ritual (health) | ✅ ReviewRitual | ✅ Done |
 
 ### ⚠️ Remaining
-1. **Partial test coverage** — 42 tests, ~15% overall (auth 96%, encryption 92%, meeting 100%, ai-classifier 100%)
+1. **Partial test coverage** — 42 tests, ~15% overall
 2. **CI/CD secrets not configured** — workflows created, need GitHub secrets
-3. **Admin Panel "Users" tab** — placeholder
-4. **Network visualization graph** — not built
+3. **Network visualization graph** — not built
 
 ### ❌ Future
 - AI Service (FastAPI + Celery)
