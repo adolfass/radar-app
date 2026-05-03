@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useAuthStore } from '../store/authStore';
+import { CULTURAL_ARCHETYPES } from '../theme/culturalColors';
 
 export function DashboardRadar() {
   const navigate = useNavigate();
@@ -167,6 +168,40 @@ export function DashboardRadar() {
             </div>
             <span style={styles.circleCount}>{circles.development}/100</span>
           </div>
+        </div>
+      </div>
+
+      {/* Cultural Archetypes Legend */}
+      <div style={styles.section}>
+        <h2 style={styles.sectionTitle}>Культурные архетипы</h2>
+        <div style={styles.archetypeGrid}>
+          {Object.entries(CULTURAL_ARCHETYPES).map(([key, val]) => (
+            <div key={key} style={styles.archetypeCard}>
+              <div
+                style={{
+                  ...styles.archetypeDot,
+                  backgroundColor: val.color,
+                  boxShadow: `0 0 8px ${val.glow}`,
+                }}
+              />
+              <span style={styles.archetypeLabel}>{val.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Analytics Quick Links */}
+      <div style={styles.section}>
+        <h2 style={styles.sectionTitle}>Аналитика</h2>
+        <div style={styles.analyticsGrid}>
+          <button onClick={() => navigate('/insights')} style={styles.analyticsCard}>
+            <span style={styles.analyticsIcon}>📊</span>
+            <span style={styles.analyticsLabel}>Инсайты</span>
+          </button>
+          <button onClick={() => navigate('/graph')} style={styles.analyticsCard}>
+            <span style={styles.analyticsIcon}>🕸️</span>
+            <span style={styles.analyticsLabel}>Граф сети</span>
+          </button>
         </div>
       </div>
 
@@ -486,5 +521,54 @@ const styles: Record<string, React.CSSProperties> = {
   ritualArrow: {
     fontSize: '20px',
     color: 'var(--radar-text-tertiary)',
+  },
+  archetypeGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '10px',
+  },
+  archetypeCard: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '12px',
+    backgroundColor: 'var(--radar-surface)',
+    border: '1px solid var(--radar-border)',
+    borderRadius: '10px',
+  },
+  archetypeDot: {
+    width: '14px',
+    height: '14px',
+    borderRadius: '7px',
+    flexShrink: 0,
+  },
+  archetypeLabel: {
+    fontSize: '13px',
+    fontWeight: '600',
+    color: 'var(--radar-text)',
+  },
+  analyticsGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '10px',
+  },
+  analyticsCard: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '20px 12px',
+    backgroundColor: 'var(--radar-surface)',
+    border: '1px solid var(--radar-border)',
+    borderRadius: '12px',
+    cursor: 'pointer',
+  },
+  analyticsIcon: {
+    fontSize: '28px',
+  },
+  analyticsLabel: {
+    fontSize: '13px',
+    fontWeight: '600',
+    color: 'var(--radar-text)',
   },
 };

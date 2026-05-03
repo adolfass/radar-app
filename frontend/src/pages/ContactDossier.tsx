@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
+import {
+  getArchetypeColor,
+  getArchetypeLabel,
+  getArchetypeHint,
+  getArchetypeGlow,
+} from '../theme/culturalColors';
 
 export function ContactDossier() {
   const { id } = useParams<{ id: string }>();
@@ -124,8 +130,14 @@ export function ContactDossier() {
             </span>
           )}
           {contact.archetype && (
-            <span style={{ ...styles.tag, backgroundColor: 'var(--radar-surface-elevated)' }}>
-              {contact.archetype}
+            <span
+              style={{
+                ...styles.tag,
+                backgroundColor: getArchetypeColor(contact.archetype),
+                boxShadow: `0 0 12px ${getArchetypeGlow(contact.archetype)}`,
+              }}
+            >
+              {getArchetypeLabel(contact.archetype)}
             </span>
           )}
         </div>
@@ -159,8 +171,15 @@ export function ContactDossier() {
               <span style={styles.trustLabel}>-100</span>
               <span style={styles.trustLabel}>0</span>
               <span style={styles.trustLabel}>+100</span>
-            </div>
-          </div>
+        </div>
+
+        {/* Archetype Hint */}
+        {contact.archetype && (
+          <p style={styles.archetypeHint}>
+            💡 {getArchetypeHint(contact.archetype)}
+          </p>
+        )}
+      </div>
           <p style={{
             ...styles.trustValue,
             color: getTrustColor(trustBalance),
@@ -338,6 +357,16 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: '600',
     color: '#fff',
     textTransform: 'capitalize',
+  },
+  archetypeHint: {
+    fontSize: '13px',
+    color: 'var(--radar-text-secondary)',
+    fontStyle: 'italic',
+    marginTop: '12px',
+    padding: '10px 14px',
+    backgroundColor: 'var(--radar-surface)',
+    borderRadius: '10px',
+    borderLeft: '3px solid var(--radar-accent)',
   },
   trustScale: {
     backgroundColor: 'var(--radar-surface)',
