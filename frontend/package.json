@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@sentry/browser": "^10.51.0",
+    "@sentry/react": "^10.51.0",
     "@telegram-apps/sdk-react": "^2.0.0",
     "axios": "^1.6.5",
     "react": "^18.2.0",
