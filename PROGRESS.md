@@ -32,7 +32,7 @@
 - [x] **AI Classifier** — heuristic-based contact classification (circles, roles, recommendations)
 - [x] **Network Graph** — force-directed visualization
 - [x] **Health Check** — GET /api/health with PostgreSQL connectivity
-- [x] **Unit Tests** — 52 tests, 5 suites (auth, encryption, meeting, ai-classifier, trust)
+- [x] **Unit Tests** — 87 tests, 7 suites (auth, encryption, meeting, ai-classifier, trust, contact, bqg)
 
 #### Frontend — RADAR Screens
 - [x] **DashboardRadar** — главная: обзор сети, круги, BQG, quick actions
