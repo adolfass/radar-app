@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Body,
   Param,
@@ -32,6 +33,15 @@ export class ContactController {
   @Post('add-by-ref')
   async addByRef(@Request() req, @Body() addDto: AddContactByRefDto) {
     return this.contactService.addByRef(req.user.userId, addDto);
+  }
+
+  @Patch(':id/private-meta')
+  async updatePrivateMeta(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+    @Body() body: { privateMeta: Record<string, unknown> },
+  ) {
+    return this.contactService.updatePrivateMeta(id, req.user.userId, body.privateMeta);
   }
 
   @Delete(':id')

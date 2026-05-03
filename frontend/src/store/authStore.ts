@@ -1,7 +1,5 @@
 import { create } from 'zustand';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://radar.zazvezdu.online/api';
+import { api } from '../lib/api';
 
 interface User {
   id: number;
@@ -25,63 +23,34 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  token: localStorage.getItem('radar_token'),
+  token: localStorage.getItem('auth_token'),
   loading: false,
   error: null,
   initAuth: async (initData: string) => {
-    console.log('[Auth] initAuth called with initData length:', initData?.length);
-    console.log('[Auth] initData preview:', initData?.substring(0, 50) + '...');
-    
-    // Если уже есть пользователь, не делаем запрос
-    if (get().user) {
-      console.log('[Auth] User already logged in');
-      return;
-    }
-    
-    // Если initData пустой
+    if (get().user) return;
     if (!initData || initData.trim() === '') {
-      console.error('[Auth] Empty initData');
-      set({ 
-        error: 'Нет данных от Telegram. Перезапустите бота.', 
-        loading: false 
-      });
+      set({ error: 'Нет данных от Telegram. Перезапустите бота.', loading: false });
       return;
     }
 
     set({ loading: true, error: null });
     try {
-      console.log('[Auth] Sending auth request...');
-      const response = await axios.post(`${API_URL}/auth/validate`, { 
-        initData: initData.trim() 
-      });
-      
-      console.log('[Auth] Response:', response.status, response.data);
+      const response = await api.post('/auth/validate', { initData: initData.trim() });
       const { user, token } = response.data;
-      
-      localStorage.setItem('radar_token', token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
+
+      localStorage.setItem('auth_token', token);
+
       set({ user, token, loading: false });
-      console.log('[Auth] Success! User:', user.firstName);
     } catch (error: any) {
-      console.error('[Auth] Error:', error);
       const errorMsg = error.response?.data?.message || error.message || 'Ошибка авторизации';
       set({ error: errorMsg, loading: false });
     }
   },
   logout: () => {
-    localStorage.removeItem('radar_token');
-    delete axios.defaults.headers.common['Authorization'];
+    localStorage.removeItem('auth_token');
     set({ user: null, token: null, error: null });
   },
   clearError: () => {
     set({ error: null });
   },
 }));
-
-// Set initial token if exists
-const token = localStorage.getItem('radar_token');
-if (token) {
-  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-  console.log('[Auth] Restored token from localStorage');
-}

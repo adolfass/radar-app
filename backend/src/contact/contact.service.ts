@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReferralService } from '../referral/referral.service';
+import { EncryptionService } from '../encryption/encryption.service';
 import { AddContactByRefDto } from './dto/add-contact-by-ref.dto';
 
 @Injectable()
@@ -8,6 +9,7 @@ export class ContactService {
   constructor(
     private prisma: PrismaService,
     private referralService: ReferralService,
+    private encryption: EncryptionService,
   ) {}
 
   async findAll(userId: number, search?: string) {
@@ -18,7 +20,8 @@ export class ContactService {
         { personalData: { contains: search, mode: 'insensitive' } },
       ];
     }
-    return this.prisma.contact.findMany({ where, orderBy: { createdAt: 'desc' } });
+    const contacts = await this.prisma.contact.findMany({ where, orderBy: { createdAt: 'desc' } });
+    return contacts.map(contact => this.decryptPrivateMeta(contact));
   }
 
   async findOne(id: number, userId: number) {
@@ -26,11 +29,11 @@ export class ContactService {
     if (!contact || contact.userId !== userId) {
       throw new NotFoundException('Contact not found');
     }
-    return contact;
+    return this.decryptPrivateMeta(contact);
   }
 
   async addByRef(userId: number, addDto: AddContactByRefDto) {
-    const { contactId, refUserId } = addDto;
+    const { contactId, refUserId, privateMeta } = addDto;
     const businessCard = await this.prisma.businessCard.findUnique({
       where: { contactId },
       include: { user: true },
@@ -41,8 +44,10 @@ export class ContactService {
       where: { userId_contactId: { userId, contactId } },
     });
     if (existingContact) {
-      return { message: 'Contact already exists', contact: existingContact };
+      return { message: 'Contact already exists', contact: this.decryptPrivateMeta(existingContact) };
     }
+
+    const encryptedPrivateMeta = privateMeta ? this.encryption.encryptJSON(privateMeta) : null;
 
     const contact = await this.prisma.contact.create({
       data: {
@@ -51,6 +56,7 @@ export class ContactService {
         businessName: businessCard.businessName,
         resources: businessCard.resources,
         personalData: businessCard.personalData,
+        privateMeta: encryptedPrivateMeta,
       },
     });
 
@@ -59,7 +65,23 @@ export class ContactService {
       await this.referralService.processReferral(userId, referrerNumericId, 'contact_added');
     }
 
-    return contact;
+    return this.decryptPrivateMeta(contact);
+  }
+
+  async updatePrivateMeta(id: number, userId: number, privateMeta: Record<string, unknown>) {
+    const contact = await this.prisma.contact.findUnique({ where: { id } });
+    if (!contact || contact.userId !== userId) {
+      throw new NotFoundException('Contact not found');
+    }
+
+    const encryptedPrivateMeta = this.encryption.encryptJSON(privateMeta);
+
+    const updated = await this.prisma.contact.update({
+      where: { id },
+      data: { privateMeta: encryptedPrivateMeta },
+    });
+
+    return this.decryptPrivateMeta(updated);
   }
 
   async remove(id: number, userId: number) {
@@ -89,5 +111,16 @@ export class ContactService {
       .filter(Boolean)
       .join('\n');
     return { vcard, filename: `${contact.businessName || 'contact'}.vcf` };
+  }
+
+  private decryptPrivateMeta(contact: any) {
+    if (contact.privateMeta) {
+      try {
+        contact.privateMeta = this.encryption.decryptJSON(contact.privateMeta);
+      } catch {
+        contact.privateMeta = null;
+      }
+    }
+    return contact;
   }
 }

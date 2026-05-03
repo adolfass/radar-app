@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import { api } from '../lib/api';
 
 export function useBusinessCards() {
   const [cards, setCards] = useState<any[]>([]);
@@ -11,7 +9,7 @@ export function useBusinessCards() {
   const fetchCards = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/business-cards`);
+      const response = await api.get('/business-cards');
       setCards(response.data);
       setError(null);
     } catch (err: any) {
@@ -22,19 +20,19 @@ export function useBusinessCards() {
   };
 
   const createCard = async (data: any) => {
-    const response = await axios.post(`${API_URL}/business-cards`, data);
+    const response = await api.post('/business-cards', data);
     await fetchCards();
     return response.data;
   };
 
   const updateCard = async (id: number, data: any) => {
-    const response = await axios.put(`${API_URL}/business-cards/${id}`, data);
+    const response = await api.put(`/business-cards/${id}`, data);
     await fetchCards();
     return response.data;
   };
 
   const deleteCard = async (id: number) => {
-    await axios.delete(`${API_URL}/business-cards/${id}`);
+    await api.delete(`/business-cards/${id}`);
     await fetchCards();
   };
 
@@ -52,7 +50,7 @@ export function useContacts() {
   const fetchContacts = async (search?: string) => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/contacts`, {
+      const response = await api.get('/contacts', {
         params: { search },
       });
       setContacts(response.data);
@@ -64,16 +62,16 @@ export function useContacts() {
   };
 
   const addByRef = async (contactId: string, refUserId?: string) => {
-    return axios.post(`${API_URL}/contacts/add-by-ref`, { contactId, refUserId });
+    return api.post('/contacts/add-by-ref', { contactId, refUserId });
   };
 
   const deleteContact = async (id: number) => {
-    await axios.delete(`${API_URL}/contacts/${id}`);
+    await api.delete(`/contacts/${id}`);
     await fetchContacts();
   };
 
   const exportVCard = async (id: number) => {
-    return axios.get(`${API_URL}/contacts/export/${id}`);
+    return api.get(`/contacts/export/${id}`);
   };
 
   useEffect(() => {
@@ -90,7 +88,7 @@ export function useEvents() {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/events`);
+      const response = await api.get('/events');
       setEvents(response.data);
     } catch (error) {
       console.error('Failed to load events:', error);
@@ -100,11 +98,11 @@ export function useEvents() {
   };
 
   const registerForEvent = async (eventId: number) => {
-    return axios.post(`${API_URL}/events/${eventId}/register`);
+    return api.post(`/events/${eventId}/register`);
   };
 
   const unregisterFromEvent = async (eventId: number) => {
-    return axios.post(`${API_URL}/events/${eventId}/unregister`);
+    return api.post(`/events/${eventId}/unregister`);
   };
 
   useEffect(() => {
@@ -121,7 +119,7 @@ export function useReferrals() {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/referrals/stats`);
+      const response = await api.get('/referrals/stats');
       setStats(response.data);
     } catch (error) {
       console.error('Failed to load referral stats:', error);
@@ -131,7 +129,7 @@ export function useReferrals() {
   };
 
   const getReferralLink = async () => {
-    return axios.get(`${API_URL}/referrals/link`);
+    return api.get('/referrals/link');
   };
 
   useEffect(() => {

@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import { api } from '../lib/api';
 
 export function AdminPanel() {
   const navigate = useNavigate();
@@ -16,7 +14,7 @@ export function AdminPanel() {
 
   const fetchOrganizedEvents = async () => {
     try {
-      const response = await axios.get(`${API_URL}/events/organized`);
+      const response = await api.get('/events/organized');
       setEvents(response.data);
     } catch (error) {
       console.error('Failed to load events:', error);
@@ -40,7 +38,7 @@ export function AdminPanel() {
     }
 
     try {
-      await axios.post(`${API_URL}/events`, {
+      await api.post('/events', {
         title,
         description,
         location,
@@ -59,7 +57,7 @@ export function AdminPanel() {
     if (!confirm('Удалить событие?')) return;
 
     try {
-      await axios.delete(`${API_URL}/events/${eventId}`);
+      await api.delete(`/events/${eventId}`);
       alert('Событие удалено');
       fetchOrganizedEvents();
     } catch (error) {

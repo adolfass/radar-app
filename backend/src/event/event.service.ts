@@ -66,7 +66,7 @@ export class EventService {
     });
   }
 
-  async findOne(id: number, _userId: number) {
+  async findOne(id: number, userId: number) {
     const event = await this.prisma.event.findUnique({
       where: { id },
       include: {
@@ -96,6 +96,13 @@ export class EventService {
 
     if (!event) {
       throw new NotFoundException('Event not found');
+    }
+
+    // Only organizer can see all participants; others see only their own registration
+    if (event.organizerId !== userId) {
+      event.registrations = event.registrations.filter(
+        (reg) => reg.userId === userId,
+      );
     }
 
     return event;

@@ -1,0 +1,98 @@
+# PROGRESS.md
+
+## Current Status: ✅ Core Features Complete
+**Date**: 2026-05-03
+
+---
+
+### ✅ Completed
+
+#### Infrastructure
+- [x] VDS (157.22.175.40) — root access, Ubuntu
+- [x] Finland proxy (78.17.76.33) — SSH tunnel :1080, UFW locked
+- [x] PostgreSQL (5433) + Redis (6380) — Docker
+- [x] Backend — PM2 fork mode, port 3002 (stable, ecosystem.config.js)
+- [x] Nginx — `radar.strateg.space`, SSL
+- [x] Telegram webhook — active
+- [x] CORS restricted, rate limiting, global exception filter
+- [x] CI/CD — GitHub Actions (ci.yml + cd.yml), deploy.sh script
+
+#### Backend Modules
+- [x] **Auth** — Telegram initData → JWT
+- [x] **BusinessCard** — CRUD + QR
+- [x] **Contact** — CRUD + vCard + referral + AES-GCM encrypted privateMeta
+- [x] **Event** — CRUD + registration
+- [x] **Referral** — stats, logs, link
+- [x] **BQG** — quarterly goals, missing roles
+- [x] **Trust** — balance tracking, interactions
+- [x] **Ritual** — review rituals, network health
+- [x] **Subscription** — free/premium, trial, limits
+- [x] **Meeting** — preparation → meeting → post-fixation
+- [x] **Encryption** — AES-256-GCM for ОИС privateMeta
+
+#### Frontend — RADAR Screens
+- [x] **DashboardRadar** — главная: обзор сети, круги, BQG, quick actions
+- [x] **QRExchange** — обмен визитками: QR, инструкция
+- [x] **ContactDossier** — досье: trust balance, circle/role/archetype
+- [x] **BQGPlanner** — квартальные цели, недостающие роли
+- [x] **TrustBalance** — визуальный баланс доверия
+- [x] **ReviewRitual** — ритуал инвентаризации
+- [x] **MeetingFlow** — подготовка → встреча → пост-фиксация
+- [x] **BottomNav** — нижняя навигация: Радар, QR, Встречи, Контакты, Профиль
+- [x] **OLED theme** — `#000` bg, safe-area, touch targets ≥44px
+
+#### 4 Pillars — Status
+| Pillar | Backend | Frontend | Status |
+|---|---|---|---|
+| **Подготовка** | ✅ Meeting | ✅ MeetingFlow | ✅ Done |
+| **Системность** | ✅ Ritual, BQG | ✅ ReviewRitual, BQGPlanner | ✅ Done |
+| **Взаимность** | ✅ Trust | ✅ TrustBalance, ContactDossier | ✅ Done |
+| **Обновление** | ✅ Ritual (health) | ✅ ReviewRitual | ✅ Done |
+
+### ⚠️ Remaining
+1. **Partial test coverage** — 33 tests, 12% overall (auth 96%, encryption 92%, meeting 100%)
+2. **CI/CD secrets not configured** — workflows created, need GitHub secrets
+3. **AI classification** — contact roles, circles, recommendations
+4. **Admin Panel "Users" tab** — placeholder
+5. **Network visualization graph** — not built
+
+### ❌ Future
+- AI Service (FastAPI + Celery)
+- Neo4j integration
+- Zod validation layer
+- pino logging, Sentry
+- Payment provider (Telegram Stars)
+
+---
+
+### 📱 Frontend Routes
+
+| Route | Screen | Pillar |
+|---|---|---|
+| `/` | DashboardRadar | Overview |
+| `/qr-exchange` | QRExchange | Entry point |
+| `/contacts/:id` | ContactDossier | Trust |
+| `/bqg` | BQGPlanner | Systematicity |
+| `/trust` | TrustBalance | Reciprocity |
+| `/ritual` | ReviewRitual | Renewal |
+| `/meetings` | MeetingFlow | Preparation |
+| `/profile` | ProfileScreen | Legacy |
+| `/contacts` | ContactsScreen | Legacy |
+| `/events` | EventsScreen | Legacy |
+| `/card/:contactId` | CardDetail | Legacy |
+
+---
+
+### 🔧 Infrastructure
+
+| Component | Status | Details |
+|---|---|---|
+| VDS (157.22.175.40) | ✅ | Root, Ubuntu |
+| Finland (78.17.76.33) | ✅ | SSH tunnel :1080 |
+| PostgreSQL | ✅ | Docker, 5433 |
+| Redis | ✅ | Docker, 6380 |
+| Backend | ✅ | PM2, 3002, stable |
+| Frontend | ✅ | Built, nginx, BottomNav |
+| Nginx | ✅ | radar.strateg.space, SSL |
+| Telegram | ✅ | Webhook active |
+| Encryption | ✅ | AES-256-GCM, ENCRYPTION_KEY in .env |

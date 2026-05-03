@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNotEmpty } from 'class-validator';
+import { IsString, IsOptional, IsNotEmpty, IsObject } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class AddContactByRefDto {
@@ -11,4 +11,9 @@ export class AddContactByRefDto {
   @IsString()
   @IsOptional()
   refUserId?: string;
+
+  @ApiPropertyOptional({ description: 'Приватные метаданные (ОИС теги)', type: 'object' })
+  @IsObject()
+  @IsOptional()
+  privateMeta?: Record<string, unknown>;
 }

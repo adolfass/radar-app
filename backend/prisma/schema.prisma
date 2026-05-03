@@ -30,7 +30,120 @@ model User {
   referralLogsAsUser    ReferralLog[] @relation("ReferralLogUser")
   referralLogsAsReferrer ReferralLog[] @relation("ReferralLogReferrer")
 
+  // New mandates
+  subscription    Subscription?
+  bqgs            BQG[]
+  trustInteractions TrustInteraction[] @relation("UserTrust")
+  rituals         ReviewRitual[]
+  networkSnapshots NetworkHealthSnapshot[]
+  meetings        Meeting[]
+
   @@map("users")
+}
+
+model Subscription {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @unique @map("user_id")
+  plan        String    @default("free") // free, premium
+  expiresAt   DateTime? @map("expires_at")
+  isActive    Boolean   @default(true) @map("is_active")
+  trialStart  DateTime? @map("trial_start")
+  trialEnd    DateTime? @map("trial_end")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model BQG {
+  id            Int       @id @default(autoincrement())
+  userId        Int       @map("user_id")
+  goal          String
+  missingRoles  String?   @map("missing_roles") // JSON array of missing roles
+  quarterStart  DateTime  @map("quarter_start")
+  quarterEnd    DateTime  @map("quarter_end")
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("bqgs")
+}
+
+model Contact {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  contactId   String    @map("contact_id")
+  businessName String?  @map("business_name")
+  resources   String?
+  personalData String?  @map("personal_data")
+
+  // New mandates
+  circle        String?   @default("productivity") // support, productivity, development
+  archetype     String?   // peach, pomegranate, apple
+  aiSuggestedRole String? @map("ai_suggested_role") // connector, condensator, bridge, gatekeeper
+  privateMeta   String?   @map("private_meta") // encrypted ОИС tags
+  lastInteraction DateTime? @map("last_interaction")
+  isActive      Boolean   @default(true) @map("is_active")
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trustInteractions TrustInteraction[] @relation("ContactTrust")
+
+  @@unique([userId, contactId])
+  @@map("contacts")
+}
+
+model TrustInteraction {
+  id            Int       @id @default(autoincrement())
+  userId        Int       @map("user_id")
+  contactId     Int       @map("contact_id")
+  type          String    // you_helped, they_helped, mutual
+  description   String?
+  balanceDelta  Int       @default(0) @map("balance_delta") // -100 to +100
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade, name: "UserTrust")
+  contact       Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade, name: "ContactTrust")
+
+  @@map("trust_interactions")
+}
+
+model ReviewRitual {
+  id            Int       @id @default(autoincrement())
+  userId        Int       @map("user_id")
+  startedAt     DateTime  @map("started_at")
+  completedAt   DateTime? @map("completed_at")
+  metrics       String?   // JSON: contactsReviewed, archived, unfrozen, etc.
+  status        String    @default("in_progress") // in_progress, completed, abandoned
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("review_rituals")
+}
+
+model NetworkHealthSnapshot {
+  id            Int       @id @default(autoincrement())
+  userId        Int       @map("user_id")
+  density       Float?
+  diversity     Float?
+  freshness     Float?
+  trustBalance  Int       @default(0) @map("trust_balance")
+  totalContacts Int       @default(0) @map("total_contacts")
+  activeContacts Int      @default(0) @map("active_contacts")
+  supportCircle Int       @default(0) @map("support_circle")
+  productivityCircle Int  @default(0) @map("productivity_circle")
+  developmentCircle Int   @default(0) @map("development_circle")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("network_health_snapshots")
 }
 
 model BusinessCard {
@@ -48,21 +161,6 @@ model BusinessCard {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("business_cards")
-}
-
-model Contact {
-  id          Int       @id @default(autoincrement())
-  userId      Int       @map("user_id")
-  contactId   String    @map("contact_id")
-  businessName String?  @map("business_name")
-  resources   String?
-  personalData String?  @map("personal_data")
-  createdAt   DateTime  @default(now()) @map("created_at")
-
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, contactId])
-  @@map("contacts")
 }
 
 model Referral {
@@ -123,4 +221,24 @@ model EventRegistration {
 
   @@unique([eventId, userId])
   @@map("event_registrations")
+}
+
+model Meeting {
+  id              Int       @id @default(autoincrement())
+  userId          Int       @map("user_id")
+  contactId       Int       @map("contact_id")
+  location        String?
+  scheduledAt     DateTime? @map("scheduled_at")
+  actualAt        DateTime? @map("actual_at")
+  status          String    @default("planned") // planned, in_progress, completed, cancelled
+  anchors         String?   // JSON: conversation anchors/topics to discuss
+  notes           String?   // notes during meeting
+  outcomes        String?   // JSON: outcomes, action items, follow-ups
+  followUpDate    DateTime? @map("follow_up_date")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("meetings")
 }

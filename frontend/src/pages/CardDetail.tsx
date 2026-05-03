@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import { api } from '../lib/api';
 
 export function CardDetail() {
   const { contactId } = useParams<{ contactId: string }>();
@@ -14,17 +12,15 @@ export function CardDetail() {
   useEffect(() => {
     const fetchCard = async () => {
       try {
-        // Get ref_user_id from URL params
         const urlParams = new URLSearchParams(window.location.search);
         const refUserId = urlParams.get('ref_user_id');
 
-        const response = await axios.get(`${API_URL}/business-cards/public/${contactId}`);
+        const response = await api.get(`/business-cards/public/${contactId}`);
         setCard(response.data);
 
-        // If ref_user_id exists, add contact
         if (refUserId) {
           try {
-            await axios.post(`${API_URL}/contacts/add-by-ref`, {
+            await api.post('/contacts/add-by-ref', {
               contactId,
               refUserId,
             });
@@ -49,7 +45,7 @@ export function CardDetail() {
       const urlParams = new URLSearchParams(window.location.search);
       const refUserId = urlParams.get('ref_user_id');
 
-      await axios.post(`${API_URL}/contacts/add-by-ref`, {
+      await api.post('/contacts/add-by-ref', {
         contactId,
         refUserId: refUserId || undefined,
       });

@@ -3,11 +3,11 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Добавляем глобальный префикс /api
   app.setGlobalPrefix('api');
 
   app.useGlobalPipes(
@@ -18,12 +18,16 @@ async function bootstrap() {
     }),
   );
 
+  app.useGlobalFilters(new GlobalExceptionFilter());
+
+  const configService = app.get(ConfigService);
+
+  const frontendUrl = configService.get('FRONTEND_URL', 'https://radar.strateg.space');
   app.enableCors({
-    origin: true,
+    origin: frontendUrl,
     credentials: true,
   });
 
-  const configService = app.get(ConfigService);
   const port = configService.get('PORT') || 3000;
 
   const config = new DocumentBuilder()
