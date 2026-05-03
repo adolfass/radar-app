@@ -30,6 +30,9 @@
 - [x] **Meeting** — preparation → meeting → post-fixation
 - [x] **Encryption** — AES-256-GCM for ОИС privateMeta
 - [x] **AI Classifier** — heuristic-based contact classification (circles, roles, recommendations)
+- [x] **Network Graph** — force-directed visualization
+- [x] **Health Check** — GET /api/health with PostgreSQL connectivity
+- [x] **Unit Tests** — 52 tests, 5 suites (auth, encryption, meeting, ai-classifier, trust)
 
 #### Frontend — RADAR Screens
 - [x] **DashboardRadar** — главная: обзор сети, круги, BQG, quick actions
@@ -53,8 +56,8 @@
 | **Обновление** | ✅ Ritual (health) | ✅ ReviewRitual | ✅ Done |
 
 ### ⚠️ Remaining
-1. **Partial test coverage** — 42 tests, ~15% overall
-2. **CI/CD secrets not configured** — workflows created, need GitHub secrets
+1. **CI/CD secrets not configured** — workflows created, need GitHub secrets
+2. **Zod validation layer** — planned
 
 ### ❌ Future
 - AI Service (FastAPI + Celery)
@@ -95,7 +98,7 @@
 | PostgreSQL | ✅ | Docker, 5433 |
 | Redis | ✅ | Docker, 6380 |
 | Backend | ✅ | PM2, 3002, stable |
-| Frontend | ✅ | Built, nginx, BottomNav |
+| Frontend | ✅ | Code-split, nginx, BottomNav (main: 106KB gzipped) |
 | Nginx | ✅ | radar.strateg.space, SSL |
 | Telegram | ✅ | Webhook active |
 | Encryption | ✅ | AES-256-GCM, ENCRYPTION_KEY in .env |
