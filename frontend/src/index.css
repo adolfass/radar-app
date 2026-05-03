@@ -16,6 +16,17 @@
   --radar-circle-support: #ff9f0a;
   --radar-circle-productivity: #0a84ff;
   --radar-circle-development: #bf5af2;
+
+  /* Cultural Archetypes */
+  --archetype-pomegranate: #C41E3A;
+  --archetype-pomegranate-glow: rgba(196, 30, 58, 0.6);
+  --archetype-peach: #0066FF;
+  --archetype-peach-glow: rgba(0, 102, 255, 0.6);
+  --archetype-apple: #00AA44;
+  --archetype-apple-glow: rgba(0, 170, 68, 0.6);
+  --archetype-bridge: #FF9500;
+  --archetype-bridge-glow: rgba(255, 149, 0, 0.6);
+
   --radar-safe-top: env(safe-area-inset-top, 0px);
   --radar-safe-bottom: env(safe-area-inset-bottom, 0px);
 }

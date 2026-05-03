@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import ForceGraph2D from 'react-force-graph-2d';
 import { api } from '../lib/api';
 import { BottomNav } from '../components/BottomNav';
+import { CULTURAL_ARCHETYPES, getArchetypeColor, getArchetypeLabel } from '../theme/culturalColors';
 
 interface GraphNode {
   id: number;
   label: string;
   group: string;
+  archetype: string | null;
   size: number;
   val: number;
   x?: number;
@@ -26,11 +28,7 @@ interface GraphData {
   links: GraphLink[];
 }
 
-const groupColors: Record<string, string> = {
-  support: '#ff9f0a',
-  productivity: '#0a84ff',
-  development: '#bf5af2',
-};
+const archetypeEntries = Object.entries(CULTURAL_ARCHETYPES);
 
 export function NetworkGraph() {
   const navigate = useNavigate();
@@ -67,7 +65,7 @@ export function NetworkGraph() {
 
     fgRef.current.nodeColor((n: GraphNode) => {
       if (node && n.id === node.id) return '#ffffff';
-      return groupColors[n.group] || '#888888';
+      return getArchetypeColor(n.archetype);
     });
 
     fgRef.current.linkWidth((l: GraphLink) => {
@@ -103,18 +101,12 @@ export function NetworkGraph() {
         <button onClick={() => navigate(-1)} style={styles.backBtn}>←</button>
         <h1 style={styles.title}>Граф сети</h1>
         <div style={styles.legend}>
-          <span style={styles.legendItem}>
-            <span style={{ ...styles.legendDot, backgroundColor: groupColors.support }} />
-            Поддержка
-          </span>
-          <span style={styles.legendItem}>
-            <span style={{ ...styles.legendDot, backgroundColor: groupColors.productivity }} />
-            Продуктивность
-          </span>
-          <span style={styles.legendItem}>
-            <span style={{ ...styles.legendDot, backgroundColor: groupColors.development }} />
-            Развитие
-          </span>
+          {archetypeEntries.map(([key, val]) => (
+            <span key={key} style={styles.legendItem}>
+              <span style={{ ...styles.legendDot, backgroundColor: val.color }} />
+              {val.label}
+            </span>
+          ))}
         </div>
       </div>
 
@@ -122,7 +114,7 @@ export function NetworkGraph() {
         <ForceGraph2D
           ref={fgRef}
           graphData={graphData}
-          nodeColor={(node: GraphNode) => groupColors[node.group] || '#888888'}
+          nodeColor={(node: GraphNode) => getArchetypeColor(node.archetype)}
           nodeRelSize={6}
           nodeVal={(node: GraphNode) => node.val}
           nodeLabel={(node: GraphNode) => node.label}
@@ -141,10 +133,13 @@ export function NetworkGraph() {
             <div
               style={{
                 ...styles.nodeInfoDot,
-                backgroundColor: groupColors[selectedNode.group],
+                backgroundColor: getArchetypeColor(selectedNode.archetype),
               }}
             />
             <span style={styles.nodeInfoName}>{selectedNode.label}</span>
+            {selectedNode.archetype && (
+              <span style={styles.archetypeBadge}>{getArchetypeLabel(selectedNode.archetype)}</span>
+            )}
             <button onClick={() => setSelectedNode(null)} style={styles.closeBtn}>✕</button>
           </div>
           <div style={styles.nodeInfoActions}>
@@ -251,10 +246,18 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '6px',
   },
   nodeInfoName: {
-    flex: 1,
     fontSize: '16px',
     fontWeight: '600',
     color: 'var(--radar-text)',
+  },
+  archetypeBadge: {
+    fontSize: '11px',
+    fontWeight: '600',
+    padding: '3px 8px',
+    borderRadius: '10px',
+    backgroundColor: 'var(--radar-surface-elevated)',
+    color: 'var(--radar-text-secondary)',
+    border: '1px solid var(--radar-border)',
   },
   closeBtn: {
     background: 'none',

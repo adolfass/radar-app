@@ -5,6 +5,7 @@ export interface GraphNode {
   id: number;
   label: string;
   group: string;
+  archetype: string | null;
   size: number;
   val: number;
 }
@@ -55,6 +56,7 @@ export class NetworkGraphService {
         id: contact.id,
         label: contact.businessName || 'Unknown',
         group,
+        archetype: contact.archetype,
         size: Math.max(3, Math.min(15, 3 + deltas.length * 0.5)),
         val: Math.max(1, Math.min(10, 1 + Math.abs(totalTrust) * 0.1)),
       };
