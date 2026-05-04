@@ -21,6 +21,8 @@ async function bootstrap() {
 
   app.useGlobalFilters(new GlobalExceptionFilter());
 
+  app.setGlobalPrefix('api');
+
   const configService = app.get(ConfigService);
 
   const frontendUrl = configService.get('FRONTEND_URL', 'https://radar.strateg.space');
