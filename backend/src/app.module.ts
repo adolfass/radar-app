@@ -20,6 +20,7 @@ import { AiClassifierModule } from './ai-classifier/ai-classifier.module';
 import { NetworkGraphModule } from './network-graph/network-graph.module';
 import { HealthModule } from './health/health.module';
 import { Neo4jModule } from './neo4j/neo4j.module';
+import { CryptoPayModule } from './payments/crypto-pay.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { Neo4jModule } from './neo4j/neo4j.module';
     NetworkGraphModule,
     HealthModule,
     Neo4jModule,
+    CryptoPayModule,
   ],
 })
 export class AppModule {}

@@ -1,0 +1,1 @@
+export { CryptoPayButton } from './CryptoPayButton';

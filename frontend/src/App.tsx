@@ -14,6 +14,7 @@ import { CardDetail } from './pages/CardDetail';
 import { EventsScreen } from './pages/EventsScreen';
 import { ContactsScreen } from './pages/ContactsScreen';
 import { AdminPanel } from './pages/AdminPanel';
+import { SubscriptionScreen } from './pages/SubscriptionScreen';
 import { LoadingScreen } from './components/LoadingScreen';
 import { BottomNav } from './components/BottomNav';
 
@@ -129,6 +130,7 @@ function AppRoutes() {
         <Route path="/events" element={<EventsScreen />} />
         <Route path="/contacts" element={<ContactsScreen />} />
         <Route path="/admin" element={user?.isOrganizer ? <AdminPanel /> : <Navigate to="/" />} />
+        <Route path="/subscription" element={<SubscriptionScreen />} />
       </Routes>
       {showBottomNav && <BottomNav />}
     </>

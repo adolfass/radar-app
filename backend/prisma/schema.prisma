@@ -32,6 +32,7 @@ model User {
 
   // New mandates
   subscription    Subscription?
+  cryptoPayments  CryptoPayment[]
   bqgs            BQG[]
   trustInteractions TrustInteraction[] @relation("UserTrust")
   rituals         ReviewRitual[]
@@ -53,8 +54,35 @@ model Subscription {
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments    CryptoPayment[]
 
   @@map("subscriptions")
+}
+
+enum CryptoPaymentStatus {
+  PENDING
+  PAID
+  EXPIRED
+  FAILED
+}
+
+model CryptoPayment {
+  id            String   @id @default(cuid())
+  userId        Int      @map("user_id")
+  invoiceId     String   @unique @map("invoice_id") // Crypto Pay invoice_id
+  amountUsd     Float    @map("amount_usd")
+  amountUsdt    Float    @map("amount_usdt")
+  asset         String   // "USDT"
+  status        CryptoPaymentStatus @default(PENDING)
+  payload       String   // JSON string with plan info
+  confirmedAt   DateTime? @map("confirmed_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription  Subscription? @relation(fields: [subscriptionId], references: [id])
+  subscriptionId Int?    @map("subscription_id")
+
+  @@map("crypto_payments")
 }
 
 model BQG {
