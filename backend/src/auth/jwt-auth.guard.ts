@@ -1,24 +1,37 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    private configService: ConfigService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      return false;
+      throw new UnauthorizedException('No token provided');
     }
 
     try {
       const payload = await this.jwtService.verifyAsync(token);
+      
+      const expectedBotUsername = this.configService.get('TELEGRAM_BOT_USERNAME') || 'radar_strateg_bot';
+      if (payload.botUsername && payload.botUsername !== expectedBotUsername) {
+        throw new UnauthorizedException('Token from different bot');
+      }
+      
       request['user'] = payload;
-    } catch {
-      return false;
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new UnauthorizedException('Invalid token');
     }
 
     return true;

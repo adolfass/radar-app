@@ -19,21 +19,15 @@ export class AuthService {
 
   async validateUser(authDto: AuthDto) {
     const { initData } = authDto;
-    console.log(
-      'Received initData:',
-      initData ? 'present (' + initData.length + ' chars)' : 'empty',
-    );
 
     const isValid = this.validateTelegramData(initData);
-    console.log('InitData valid:', isValid);
-
     if (!isValid) {
-      console.log('Invalid initData content:', initData?.substring(0, 100));
       throw new Error('Invalid Telegram data');
     }
 
     const urlParams = new URLSearchParams(initData);
     const userJson = urlParams.get('user');
+    const botUsername = urlParams.get('bot_callback_query_id') ? null : (await this.getBotUsernameFromConfig());
 
     if (!userJson) {
       throw new Error('No user data in initData');
@@ -41,7 +35,6 @@ export class AuthService {
 
     const userData = JSON.parse(userJson);
     const telegramId = BigInt(userData.id);
-    console.log('Telegram user ID:', telegramId);
 
     let user = await this.prisma.user.findUnique({
       where: { telegramId },
@@ -59,10 +52,8 @@ export class AuthService {
           photoUrl: null,
         },
       });
-      console.log('Created new user:', user.id);
     }
 
-    // Always try to fetch/update photo from Telegram API
     const needsPhotoUpdate = !user.photoUrl || user.photoUrl === '';
     if (needsPhotoUpdate) {
       try {
@@ -72,14 +63,12 @@ export class AuthService {
             where: { id: user.id },
             data: { photoUrl: profile.photoUrl },
           });
-          this.logger.log('Updated photoUrl for user ' + user.id);
         }
       } catch (error) {
-        this.logger.warn('Failed to fetch user photo: ' + error);
+        this.logger.warn('Failed to fetch user photo');
       }
     }
 
-    // Update user data if changed
     if (user.firstName !== userData.first_name || user.lastName !== userData.last_name || user.username !== userData.username) {
       user = await this.prisma.user.update({
         where: { id: user.id },
@@ -92,7 +81,7 @@ export class AuthService {
       });
     }
 
-    const token = await this.generateToken(user.id);
+    const token = await this.generateToken(user.id, botUsername);
 
     return {
       user: {
@@ -109,10 +98,13 @@ export class AuthService {
     };
   }
 
+  private async getBotUsernameFromConfig(): Promise<string> {
+    return this.configService.get('TELEGRAM_BOT_USERNAME') || 'radar_strateg_bot';
+  }
+
   private validateTelegramData(initData: string): boolean {
     const botToken = this.configService.get('TELEGRAM_BOT_TOKEN');
     if (!botToken) {
-      console.warn('TELEGRAM_BOT_TOKEN is not configured');
       return false;
     }
 
@@ -120,7 +112,6 @@ export class AuthService {
     const hash = urlParams.get('hash');
 
     if (!hash) {
-      console.log('No hash in initData');
       return false;
     }
 
@@ -138,12 +129,14 @@ export class AuthService {
       .update(sortedParams)
       .digest('hex');
 
-    const isValid = calculatedHash === hash;
-    console.log('Hash validation:', isValid ? 'passed' : 'failed');
-    return isValid;
+    return calculatedHash === hash;
   }
 
-  private async generateToken(userId: number): Promise<string> {
-    return this.jwtService.signAsync({ userId });
+  private async generateToken(userId: number, botUsername: string | null): Promise<string> {
+    const payload: any = { userId };
+    if (botUsername) {
+      payload.botUsername = botUsername;
+    }
+    return this.jwtService.signAsync(payload);
   }
 }

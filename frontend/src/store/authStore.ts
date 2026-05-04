@@ -38,7 +38,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   error: null,
   subscription: null,
   initAuth: async (initData: string) => {
-    if (get().user) return;
     if (!initData || initData.trim() === '') {
       set({ error: 'Нет данных от Telegram. Перезапустите бота.', loading: false });
       return;
@@ -56,7 +55,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await get().loadSubscription();
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || error.message || 'Ошибка авторизации';
-      set({ error: errorMsg, loading: false });
+      set({ error: errorMsg, loading: false, user: null, token: null });
+      localStorage.removeItem('auth_token');
     }
   },
   loadSubscription: async () => {
