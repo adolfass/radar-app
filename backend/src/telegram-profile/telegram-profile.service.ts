@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
-import * as net from 'net';
-import * as tls from 'tls';
+import { SocksClient } from 'socks';
+import * as https from 'https';
 
 export interface TelegramProfile {
   telegramId: number;
@@ -135,8 +135,7 @@ export class TelegramProfileService {
     const url = `https://api.telegram.org/bot${this.botToken}${path}`;
 
     if (socksHost && socksPort) {
-      const response = await this.fetchViaSocks(url, socksHost, socksPort);
-      return response;
+      return this.fetchViaSocks(url, socksHost, socksPort);
     }
 
     const res = await fetch(url);
@@ -146,77 +145,60 @@ export class TelegramProfileService {
   private async fetchViaSocks(url: string, proxyHost: string, proxyPort: number): Promise<any> {
     const { hostname, pathname, search } = new URL(url);
     const fullPath = pathname + search;
-    const port = 443;
 
-    return new Promise((resolve, reject) => {
-      const socket = net.createConnection({ host: proxyHost, port: proxyPort }, () => {
-        const handshake = Buffer.from([0x05, 0x01, 0x00]);
-        socket.write(handshake);
+    try {
+      const info = await SocksClient.createConnection({
+        command: 'connect',
+        destination: {
+          host: hostname,
+          port: 443,
+        },
+        proxy: {
+          ipaddress: proxyHost,
+          port: Number(proxyPort),
+          type: 5,
+        },
+        timeout: 10000,
       });
 
-      let stage = 0;
-      const chunks: Buffer[] = [];
+      return new Promise((resolve, reject) => {
+        const options: https.RequestOptions = {
+          servername: hostname,
+          host: hostname,
+          path: fullPath,
+          method: 'GET',
+          rejectUnauthorized: false,
+        };
+        (options as any).socket = info.socket;
 
-      socket.on('data', (data: Buffer) => {
-        chunks.push(data);
-        if (stage === 0) {
-          if (data[1] === 0x00) {
-            const isIp = net.isIP(hostname) !== 0;
-            const connectReq = Buffer.concat([
-              Buffer.from([0x05, 0x01, 0x00]),
-              isIp
-                ? Buffer.concat([
-                    Buffer.from([0x01]),
-                    net.isIP(hostname) === 4
-                      ? Buffer.from(hostname.split('.').map(Number))
-                      : Buffer.alloc(16),
-                  ])
-                : Buffer.concat([Buffer.from([0x03, hostname.length]), Buffer.from(hostname)]),
-              Buffer.from([(port >> 8) & 0xff, port & 0xff]),
-            ]);
-            socket.write(connectReq);
-            stage = 1;
-          } else {
-            socket.end();
-            reject(new Error('SOCKS5 auth failed'));
-          }
-        } else if (stage === 1) {
-          if (data[1] === 0x00) {
-            const tlsSocket = tls.connect({ socket, servername: hostname }, () => {
-              const httpReq = `GET ${fullPath} HTTP/1.1\r\nHost: ${hostname}\r\n\r\n`;
-              tlsSocket.write(httpReq);
-              stage = 2;
-            });
-
-            tlsSocket.on('data', (tlsData: Buffer) => {
-              chunks.push(tlsData);
-            });
-
-            tlsSocket.on('end', () => {
-              const full = Buffer.concat(chunks);
-              const body = full.toString('utf8').split('\r\n\r\n')[1] || '{}';
-              try {
-                resolve(JSON.parse(body));
-              } catch {
-                resolve({ ok: false });
-              }
-              socket.end();
-            });
-
-            tlsSocket.on('error', reject);
-          } else {
-            socket.end();
-            reject(new Error(`SOCKS5 connect failed: ${data[1]}`));
-          }
-        }
+        const req = https.request(options, (res) => {
+          let data = '';
+          res.on('data', (chunk) => {
+            data += chunk.toString('utf8');
+          });
+          res.on('end', () => {
+            try {
+              resolve(JSON.parse(data));
+            } catch {
+              resolve({ ok: false });
+            }
+            info.socket.end();
+          });
+        });
+        req.on('error', (e) => {
+          reject(e);
+          info.socket.end();
+        });
+        req.setTimeout(10000, () => {
+          reject(new Error('SOCKS5 timeout'));
+          req.destroy();
+        });
+        req.end();
       });
-
-      socket.on('error', reject);
-      socket.setTimeout(10000, () => {
-        socket.destroy();
-        reject(new Error('SOCKS5 timeout'));
-      });
-    });
+    } catch (error) {
+      this.logger.error('SOCKS5 connection error:', error);
+      throw error;
+    }
   }
 
   private async getFileUrl(fileId: string): Promise<string> {
