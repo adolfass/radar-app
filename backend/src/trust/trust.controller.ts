@@ -12,11 +12,26 @@ import {
 import { TrustService } from './trust.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { LogTrustDto } from './dto/log-trust.dto';
+import { AdjustTrustDto } from './dto/adjust-trust.dto';
 
 @Controller('trust')
 @UseGuards(JwtAuthGuard)
 export class TrustController {
   constructor(private trustService: TrustService) {}
+
+  @Post('adjust/:contactId')
+  async adjustTrust(
+    @Request() req,
+    @Param('contactId', ParseIntPipe) contactId: number,
+    @Body() dto: AdjustTrustDto,
+  ) {
+    return this.trustService.adjustTrust(
+      req.user.userId,
+      contactId,
+      dto.amount,
+      dto.reason,
+    );
+  }
 
   @Post('log')
   async logInteraction(@Request() req, @Body() logTrustDto: LogTrustDto) {
@@ -36,6 +51,11 @@ export class TrustController {
 
   @Get('history')
   async getTrustHistory(@Request() req, @Query('contactId', ParseIntPipe) contactId?: number) {
+    return this.trustService.getTrustHistory(req.user.userId, contactId);
+  }
+
+  @Get('history/:contactId')
+  async getContactTrustHistory(@Request() req, @Param('contactId', ParseIntPipe) contactId: number) {
     return this.trustService.getTrustHistory(req.user.userId, contactId);
   }
 

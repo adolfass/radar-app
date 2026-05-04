@@ -1,16 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthDto } from './dto/auth.dto';
+import { TelegramProfileService } from '../telegram-profile/telegram-profile.service';
 import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private telegramProfileService: TelegramProfileService,
   ) {}
 
   async validateUser(authDto: AuthDto) {
@@ -59,6 +63,19 @@ export class AuthService {
         },
       });
       console.log('Created new user:', user.id);
+    } else if (!user.photoUrl) {
+      try {
+        const profile = await this.telegramProfileService.lookupById(Number(telegramId));
+        if (profile?.photoUrl) {
+          user = await this.prisma.user.update({
+            where: { id: user.id },
+            data: { photoUrl: profile.photoUrl },
+          });
+          this.logger.log(`Updated photoUrl for user ${user.id}`);
+        }
+      } catch (error) {
+        this.logger.warn('Failed to fetch user photo:', error);
+      }
     }
 
     // Generate JWT token
@@ -73,6 +90,7 @@ export class AuthService {
         lastName: user.lastName,
         isOrganizer: user.isOrganizer,
         balance: user.balance,
+        photoUrl: user.photoUrl,
       },
       token,
     };

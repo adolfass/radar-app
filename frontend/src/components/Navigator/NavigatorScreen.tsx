@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AccordionSection } from './AccordionSection';
+import { analytics } from '../../lib/analytics';
 
 interface ChecklistState {
   bqgSet: boolean;
@@ -15,7 +16,9 @@ function getChecklist(): ChecklistState {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) return JSON.parse(stored);
-  } catch {}
+  } catch {
+    // ignore parse errors
+  }
   return { bqgSet: false, contactsAdded: false, graphViewed: false, firstMeeting: false };
 }
 
@@ -23,27 +26,63 @@ function saveChecklist(checklist: ChecklistState) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(checklist));
 }
 
+const SECTION_LABELS: Record<string, string> = {
+  welcome: 'welcome',
+  'first-steps': 'first_steps',
+  features: 'features',
+  methodology: 'methodology',
+  'goal-30': 'goal_30_days',
+  premium: 'premium',
+  faq: 'faq',
+  support: 'support',
+};
+
 export function NavigatorScreen() {
   const navigate = useNavigate();
   const [openSections, setOpenSections] = useState<string[]>(['welcome']);
   const [checklist, setChecklist] = useState<ChecklistState>(getChecklist);
+  const [abVariant] = useState(() =>
+    analytics.assignABTest('navigator_button_name', ['navigator', 'helper', 'guide'])
+  );
+
+  useEffect(() => {
+    analytics.track('navigator_opened', { ab_variant: abVariant });
+    analytics.incrementSession();
+  }, []);
 
   useEffect(() => {
     saveChecklist(checklist);
   }, [checklist]);
 
   const toggleSection = (id: string) => {
+    analytics.trackSectionOpened(SECTION_LABELS[id] || id);
     setOpenSections(prev =>
       prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
     );
   };
 
   const updateChecklist = (key: keyof ChecklistState, value: boolean) => {
+    if (value) {
+      analytics.trackChecklistCompleted(key);
+    }
     setChecklist(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handlePremiumClick = () => {
+    analytics.trackPremiumCtaClicked();
+    navigate('/subscription');
   };
 
   const completedCount = Object.values(checklist).filter(Boolean).length;
   const totalSteps = Object.keys(checklist).length;
+
+  const abVariantNames: Record<string, { icon: string; name: string }> = {
+    navigator: { icon: '🎯', name: 'Навигатор' },
+    helper: { icon: '🧭', name: 'Помощник' },
+    guide: { icon: '📖', name: 'Гайд' },
+  };
+
+  const variantInfo = abVariantNames[abVariant] || abVariantNames.navigator;
 
   return (
     <div style={{
@@ -57,7 +96,7 @@ export function NavigatorScreen() {
         background: 'linear-gradient(to bottom, rgba(37, 99, 235, 0.2), transparent)',
       }}>
         <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff', margin: 0 }}>
-          🎯 Навигатор
+          {variantInfo.icon} {variantInfo.name}
         </h1>
         <p style={{ fontSize: '14px', color: '#9ca3af', marginTop: '4px' }}>
           Ваш путеводитель по RADAR
@@ -276,7 +315,7 @@ export function NavigatorScreen() {
           </div>
 
           <button
-            onClick={() => navigate('/subscription')}
+            onClick={handlePremiumClick}
             style={{
               width: '100%',
               padding: '14px',

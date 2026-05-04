@@ -4,11 +4,13 @@ import { ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UserModule } from '../user/user.module';
+import { TelegramProfileModule } from '../telegram-profile/telegram-profile.module';
 
 @Global()
 @Module({
   imports: [
     UserModule,
+    TelegramProfileModule,
     JwtModule.registerAsync({
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get('JWT_SECRET') || 'secret',

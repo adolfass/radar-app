@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBusinessCards } from '../hooks/useApi';
+import { useAuth } from '../hooks/useAuth';
 
 export function BusinessCardForm() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { cards, createCard, updateCard } = useBusinessCards();
+  const { user } = useAuth();
 
   const [formData, setFormData] = useState({
     businessName: '',
@@ -27,7 +29,7 @@ export function BusinessCardForm() {
       if (card) {
         const personalData = card.personalData ? JSON.parse(card.personalData) : {};
         const resources = card.resources ? JSON.parse(card.resources) : {};
-        
+
         setFormData({
           businessName: card.businessName || '',
           fullName: personalData.fullName || '',
@@ -40,8 +42,15 @@ export function BusinessCardForm() {
           linkedin: resources.linkedin || '',
         });
       }
+    } else if (user && !formData.fullName && !formData.telegram) {
+      const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ');
+      setFormData(prev => ({
+        ...prev,
+        fullName: prev.fullName || fullName,
+        telegram: prev.telegram || (user.username ? `@${user.username}` : ''),
+      }));
     }
-  }, [id, cards]);
+  }, [id, cards, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

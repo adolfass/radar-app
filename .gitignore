@@ -42,3 +42,4 @@ prisma/migrations/
 coverage/
 .turbo
 frontend-dist/
+frontend/assets/

@@ -5,10 +5,15 @@ import { useBusinessCards, useReferrals } from '../hooks/useApi';
 
 export function ProfileScreen() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, subscription } = useAuth();
   const { cards, deleteCard } = useBusinessCards();
   const { stats, getReferralLink } = useReferrals();
   const [selectedCard, setSelectedCard] = useState<any>(null);
+
+  const isPremium = subscription?.plan === 'premium' && subscription?.isActive;
+  const trialEnd = subscription?.trialEnd ? new Date(subscription.trialEnd) : null;
+  const expiresAt = subscription?.expiresAt ? new Date(subscription.expiresAt) : null;
+  const daysLeft = expiresAt ? Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
 
   const handleCopyReferralLink = async () => {
     try {
@@ -23,7 +28,7 @@ export function ProfileScreen() {
   const handleShare = async () => {
     try {
       const response = await getReferralLink();
-      
+
       if (navigator.share) {
         await navigator.share({
           title: 'Radar - Цифровые визитки',
@@ -47,19 +52,6 @@ export function ProfileScreen() {
       <header style={{
         marginBottom: '24px',
       }}>
-        <button
-          onClick={() => navigate('/')}
-          style={{
-            background: 'none',
-            border: 'none',
-            fontSize: '24px',
-            cursor: 'pointer',
-            color: 'var(--tg-theme-text-color, #000000)',
-            marginBottom: '16px',
-          }}
-        >
-          ← Назад
-        </button>
         <h1 style={{
           fontSize: '24px',
           fontWeight: 'bold',
@@ -79,27 +71,40 @@ export function ProfileScreen() {
         alignItems: 'center',
         gap: '16px',
       }}>
-        <div style={{
-          width: '60px',
-          height: '60px',
-          borderRadius: '30px',
-          backgroundColor: 'var(--tg-theme-button-color, #2481cc)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '24px',
-          color: 'white',
-          fontWeight: 'bold',
-        }}>
-          {user?.firstName?.[0] || 'U'}
-        </div>
+        {user?.photoUrl ? (
+          <img
+            src={user.photoUrl}
+            alt={user.firstName || 'Avatar'}
+            style={{
+              width: '60px',
+              height: '60px',
+              borderRadius: '30px',
+              objectFit: 'cover',
+            }}
+          />
+        ) : (
+          <div style={{
+            width: '60px',
+            height: '60px',
+            borderRadius: '30px',
+            backgroundColor: 'var(--tg-theme-button-color, #2481cc)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '24px',
+            color: 'white',
+            fontWeight: 'bold',
+          }}>
+            {user?.firstName?.[0] || 'U'}
+          </div>
+        )}
         <div>
           <h2 style={{
             fontSize: '18px',
             fontWeight: '600',
             color: 'var(--tg-theme-text-color, #000000)',
           }}>
-            {user?.firstName || 'Пользователь'}
+            {[user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'Пользователь'}
           </h2>
           <p style={{
             fontSize: '14px',
@@ -107,6 +112,58 @@ export function ProfileScreen() {
           }}>
             @{user?.username || 'telegram_user'}
           </p>
+        </div>
+        {isPremium && (
+          <div style={{
+            marginLeft: 'auto',
+            padding: '4px 12px',
+            backgroundColor: '#fbbf24',
+            borderRadius: '12px',
+            fontSize: '12px',
+            fontWeight: '700',
+            color: '#000',
+          }}>
+            ⭐ PREMIUM
+          </div>
+        )}
+      </div>
+
+      {/* Subscription Status */}
+      <div
+        onClick={() => navigate('/subscription')}
+        style={{
+          backgroundColor: isPremium ? 'rgba(251, 191, 36, 0.1)' : 'var(--tg-theme-secondary-bg-color, #ffffff)',
+          border: isPremium ? '1px solid rgba(251, 191, 36, 0.3)' : '1px solid var(--tg-theme-border-color, #e0e0e0)',
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '16px',
+          cursor: 'pointer',
+        }}
+      >
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '24px' }}>{isPremium ? '⭐' : trialEnd ? '⏳' : '👤'}</span>
+            <div>
+              <p style={{
+                fontSize: '16px',
+                fontWeight: '600',
+                color: 'var(--tg-theme-text-color, #000000)',
+              }}>
+                {isPremium ? 'Premium' : trialEnd ? 'Пробный период' : 'Free план'}
+              </p>
+              <p style={{
+                fontSize: '12px',
+                color: 'var(--tg-theme-hint-color, #999999)',
+              }}>
+                {isPremium && expiresAt ? `Активен · ${daysLeft} дн.` : 'Нажмите для управления'}
+              </p>
+            </div>
+          </div>
+          <span style={{ color: 'var(--tg-theme-hint-color, #999999)' }}>→</span>
         </div>
       </div>
 
@@ -443,7 +500,7 @@ export function ProfileScreen() {
               marginTop: '12px',
               wordBreak: 'break-all',
             }}>
-              {selectedCard.shareLink || `https://t.me/radar_test_bot?startapp=${selectedCard.contactId}`}
+              {selectedCard.shareLink || `https://t.me/radar_strateg_bot?startapp=${selectedCard.contactId}`}
             </p>
             <div style={{
               display: 'flex',
@@ -453,7 +510,7 @@ export function ProfileScreen() {
             }}>
               <button
                 onClick={() => {
-                  const shareLink = selectedCard.shareLink || `https://t.me/radar_test_bot?startapp=${selectedCard.contactId}`;
+                  const shareLink = selectedCard.shareLink || `https://t.me/radar_strateg_bot?startapp=${selectedCard.contactId}`;
                   const shareText = `Моя визитка: ${selectedCard.businessName}\n${shareLink}`;
                   const tg = (window as any).Telegram?.WebApp;
                   
@@ -512,40 +569,6 @@ export function ProfileScreen() {
           </div>
         </div>
       )}
-
-      {/* Settings */}
-      <div style={{
-        backgroundColor: 'var(--tg-theme-secondary-bg-color, #ffffff)',
-        borderRadius: '12px',
-        padding: '20px',
-        marginBottom: '16px',
-      }}>
-        <h3 style={{
-          fontSize: '18px',
-          fontWeight: '600',
-          color: 'var(--tg-theme-text-color, #000000)',
-          marginBottom: '16px',
-        }}>
-          Настройки
-        </h3>
-        
-        <button
-          onClick={logout}
-          style={{
-            width: '100%',
-            padding: '14px',
-            backgroundColor: '#ff3b30',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: '600',
-          }}
-        >
-          Выйти
-        </button>
-      </div>
 
       {user?.isOrganizer && (
         <button

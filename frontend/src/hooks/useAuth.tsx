@@ -1,23 +1,32 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { useAuthStore } from '../store/authStore';
 
+interface Subscription {
+  plan: 'free' | 'premium';
+  isActive: boolean;
+  expiresAt: string | null;
+  trialEnd: string | null;
+}
+
 interface AuthContextType {
   user: any;
   token: string | null;
   loading: boolean;
   error: string | null;
+  subscription: Subscription | null;
   initAuth: (initData: string) => Promise<void>;
   logout: () => void;
   clearError: () => void;
+  loadSubscription: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { user, token, loading, error, initAuth, logout, clearError } = useAuthStore();
+  const { user, token, loading, error, subscription, initAuth, logout, clearError, loadSubscription } = useAuthStore();
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, error, initAuth, logout, clearError }}>
+    <AuthContext.Provider value={{ user, token, loading, error, subscription, initAuth, logout, clearError, loadSubscription }}>
       {children}
     </AuthContext.Provider>
   );

@@ -107,7 +107,7 @@ const mainNavPaths = ['/', '/qr-exchange', '/meetings', '/contacts', '/navigator
 function AppRoutes() {
   const { user } = useAuth();
   const location = useLocation();
-  const showBottomNav = mainNavPaths.includes(location.pathname);
+  const showBottomNav = mainNavPaths.includes(location.pathname) && location.pathname !== '/profile';
 
   return (
     <>

@@ -6,6 +6,44 @@ import { LogTrustDto } from './dto/log-trust.dto';
 export class TrustService {
   constructor(private prisma: PrismaService) {}
 
+  async adjustTrust(userId: number, contactId: number, amount: number, reason?: string) {
+    if (amount < -100 || amount > 100) {
+      throw new BadRequestException('Amount must be between -100 and +100');
+    }
+
+    const contact = await this.prisma.contact.findUnique({
+      where: { id: contactId },
+    });
+
+    if (!contact) {
+      throw new NotFoundException('Contact not found');
+    }
+
+    if (contact.userId !== userId) {
+      throw new BadRequestException('Contact does not belong to this user');
+    }
+
+    const type = amount > 0 ? 'increase' : amount < 0 ? 'decrease' : 'neutral';
+
+    return this.prisma.trustInteraction.create({
+      data: {
+        userId,
+        contactId,
+        type,
+        description: reason || `Manual adjustment: ${amount > 0 ? '+' : ''}${amount}`,
+        balanceDelta: amount,
+      },
+      include: {
+        contact: {
+          select: {
+            id: true,
+            businessName: true,
+          },
+        },
+      },
+    });
+  }
+
   async logInteraction(
     userId: number,
     contactId: number,

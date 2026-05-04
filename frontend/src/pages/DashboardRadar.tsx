@@ -42,8 +42,10 @@ export function DashboardRadar() {
 
   const totalContacts = contacts.length;
   const activeContacts = contacts.filter((c: any) => c.isActive).length;
-  const contactLimit = subscription?.data?.plan === 'premium' ? Infinity : 100;
+  const contactLimit = subscription?.plan === 'premium' ? Infinity : 100;
   const isOverLimit = totalContacts > contactLimit;
+  const isPremium = subscription?.plan === 'premium' && subscription?.isActive;
+  const hasTrial = !!subscription?.trialEnd;
 
   if (loading) {
     return (
@@ -233,29 +235,78 @@ export function DashboardRadar() {
       )}
 
       {/* Subscription Status */}
-      {subscription && (
-        <div style={styles.section}>
-          <div style={{
-            ...styles.planBadge,
-            backgroundColor: subscription.plan === 'premium' ? 'var(--radar-accent-secondary)' : 'var(--radar-surface-elevated)',
-          }}>
-            <span style={styles.planText}>
-              {subscription.plan === 'premium' ? '⭐ Premium' : 'Free'}
-            </span>
-            {subscription.plan === 'free' && (
-              <span style={styles.planLimit}>
-                {totalContacts}/{contactLimit} контактов
+      <div style={styles.section}>
+        <div style={{
+          ...styles.planBadge,
+          backgroundColor: isPremium ? 'rgba(251, 191, 36, 0.15)' : 'var(--radar-surface-elevated)',
+          border: isPremium ? '1px solid rgba(251, 191, 36, 0.3)' : '1px solid var(--radar-border)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '18px' }}>{isPremium ? '⭐' : hasTrial ? '⏳' : '👤'}</span>
+            <div>
+              <span style={styles.planText}>
+                {isPremium ? 'Premium' : hasTrial ? 'Пробный период' : 'Free'}
               </span>
-            )}
+              {isPremium && subscription?.expiresAt && (
+                <span style={styles.planExpiry}>
+                  · {Math.ceil((new Date(subscription.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))} дн.
+                </span>
+              )}
+            </div>
           </div>
-          {isOverLimit && (
-            <button
-              onClick={() => navigate('/subscription')}
-              style={styles.upgradeBtn}
-            >
-              Перейти на Premium
-            </button>
+          {!isPremium && (
+            <span style={styles.planLimit}>
+              {totalContacts}/{contactLimit} контактов
+            </span>
           )}
+        </div>
+
+        {/* Premium CTA for free users */}
+        {!isPremium && !hasTrial && (
+          <button
+            onClick={() => navigate('/subscription')}
+            style={styles.upgradeBtn}
+          >
+            Попробовать Premium бесплатно
+          </button>
+        )}
+
+        {isOverLimit && (
+          <button
+            onClick={() => navigate('/subscription')}
+            style={styles.upgradeBtn}
+          >
+            ⭐ Перейти на Premium — безлимит
+          </button>
+        )}
+      </div>
+
+      {/* Premium-locked features for free users */}
+      {!isPremium && (
+        <div style={styles.section}>
+          <h2 style={styles.sectionTitle}>Доступно в Premium</h2>
+          <div style={styles.premiumFeaturesGrid}>
+            <button onClick={() => navigate('/subscription')} style={styles.premiumFeatureCard}>
+              <span style={styles.premiumFeatureIcon}>🤖</span>
+              <span style={styles.premiumFeatureLabel}>AI-классификация ролей</span>
+              <span style={styles.premiumFeatureLock}>🔒</span>
+            </button>
+            <button onClick={() => navigate('/subscription')} style={styles.premiumFeatureCard}>
+              <span style={styles.premiumFeatureIcon}>⚖️</span>
+              <span style={styles.premiumFeatureLabel}>Баланс доверия</span>
+              <span style={styles.premiumFeatureLock}>🔒</span>
+            </button>
+            <button onClick={() => navigate('/subscription')} style={styles.premiumFeatureCard}>
+              <span style={styles.premiumFeatureIcon}>🔄</span>
+              <span style={styles.premiumFeatureLabel}>Авто-ротация сети</span>
+              <span style={styles.premiumFeatureLock}>🔒</span>
+            </button>
+            <button onClick={() => navigate('/subscription')} style={styles.premiumFeatureCard}>
+              <span style={styles.premiumFeatureIcon}>📥</span>
+              <span style={styles.premiumFeatureLabel}>Экспорт отчётов</span>
+              <span style={styles.premiumFeatureLock}>🔒</span>
+            </button>
+          </div>
         </div>
       )}
 
@@ -570,5 +621,41 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '13px',
     fontWeight: '600',
     color: 'var(--radar-text)',
+  },
+  planExpiry: {
+    fontSize: '12px',
+    color: 'var(--radar-text-secondary)',
+  },
+  premiumFeaturesGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '12px',
+  },
+  premiumFeatureCard: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '20px 12px',
+    backgroundColor: 'var(--radar-surface)',
+    border: '1px solid var(--radar-border)',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    position: 'relative',
+  },
+  premiumFeatureIcon: {
+    fontSize: '28px',
+  },
+  premiumFeatureLabel: {
+    fontSize: '12px',
+    fontWeight: '600',
+    color: 'var(--radar-text)',
+    textAlign: 'center',
+  },
+  premiumFeatureLock: {
+    position: 'absolute',
+    top: '8px',
+    right: '8px',
+    fontSize: '14px',
   },
 };

@@ -9,6 +9,14 @@ interface User {
   lastName?: string;
   isOrganizer: boolean;
   balance: number;
+  photoUrl?: string;
+}
+
+interface Subscription {
+  plan: 'free' | 'premium';
+  isActive: boolean;
+  expiresAt: string | null;
+  trialEnd: string | null;
 }
 
 interface AuthState {
@@ -16,9 +24,11 @@ interface AuthState {
   token: string | null;
   loading: boolean;
   error: string | null;
+  subscription: Subscription | null;
   initAuth: (initData: string) => Promise<void>;
   logout: () => void;
   clearError: () => void;
+  loadSubscription: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -26,6 +36,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   token: localStorage.getItem('auth_token'),
   loading: false,
   error: null,
+  subscription: null,
   initAuth: async (initData: string) => {
     if (get().user) return;
     if (!initData || initData.trim() === '') {
@@ -41,14 +52,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.setItem('auth_token', token);
 
       set({ user, token, loading: false });
+
+      await get().loadSubscription();
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || error.message || 'Ошибка авторизации';
       set({ error: errorMsg, loading: false });
     }
   },
+  loadSubscription: async () => {
+    try {
+      const res = await api.get('/subscription');
+      set({ subscription: res.data });
+    } catch {
+      set({ subscription: { plan: 'free', isActive: true, expiresAt: null, trialEnd: null } });
+    }
+  },
   logout: () => {
     localStorage.removeItem('auth_token');
-    set({ user: null, token: null, error: null });
+    set({ user: null, token: null, error: null, subscription: null });
   },
   clearError: () => {
     set({ error: null });
