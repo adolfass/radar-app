@@ -34,6 +34,7 @@
 - [x] **Health Check** — GET /api/health with PostgreSQL connectivity
 - [x] **Logging & Monitoring** — pino (backend), Sentry (frontend)
 - [x] **Neo4j Integration** — graph DB for network analysis (contacts, trust paths)
+- [x] **Crypto Pay** — USDT-TRC20 payments for Premium (monthly/yearly)
 - [x] **Unit Tests** — 87 tests, 7 suites (auth, encryption, meeting, ai-classifier, trust, contact, bqg)
 
 #### Frontend — RADAR Screens
@@ -62,7 +63,6 @@
 
 ### ❌ Future
 - AI Service (FastAPI + Celery)
-- Payment provider (Telegram Stars)
 
 ---
 
