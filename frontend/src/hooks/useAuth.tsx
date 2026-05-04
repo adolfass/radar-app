@@ -18,15 +18,16 @@ interface AuthContextType {
   logout: () => void;
   clearError: () => void;
   loadSubscription: () => Promise<void>;
+  validateToken: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { user, token, loading, error, subscription, initAuth, logout, clearError, loadSubscription } = useAuthStore();
+  const { user, token, loading, error, subscription, initAuth, logout, clearError, loadSubscription, validateToken } = useAuthStore();
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, error, subscription, initAuth, logout, clearError, loadSubscription }}>
+    <AuthContext.Provider value={{ user, token, loading, error, subscription, initAuth, logout, clearError, loadSubscription, validateToken }}>
       {children}
     </AuthContext.Provider>
   );

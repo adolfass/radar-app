@@ -1,7 +1,13 @@
-import { Controller, Post, Body, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
+import { JwtAuthGuard } from './jwt-auth.guard';
+
+interface RequestWithUser extends Request {
+  user?: any;
+}
 
 @Controller('auth')
 export class AuthController {
@@ -16,5 +22,11 @@ export class AuthController {
     } catch (error) {
       throw new UnauthorizedException('Invalid Telegram data');
     }
+  }
+
+  @Post('verify')
+  @UseGuards(JwtAuthGuard)
+  async verify(@Req() req: RequestWithUser) {
+    return { user: req.user };
   }
 }

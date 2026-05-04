@@ -35,7 +35,7 @@ function TelegramRequired() {
 }
 
 function AppContent() {
-  const { user, loading, initAuth, error, clearError } = useAuth();
+  const { user, loading, initAuth, error, clearError, validateToken, token } = useAuth();
   const navigate = useNavigate();
   const [telegramInitData, setTelegramInitData] = useState<string | null>(null);
   const [isTelegram, setIsTelegram] = useState(false);
@@ -74,6 +74,13 @@ function AppContent() {
       initAuth(telegramInitData);
     }
   }, [telegramInitData, user, authAttempted, initAuth]);
+
+  useEffect(() => {
+    if (token && !user && !authAttempted) {
+      setAuthAttempted(true);
+      validateToken();
+    }
+  }, [token, user, authAttempted, validateToken]);
 
   if (!loading && !isTelegram && !user) {
     return <TelegramRequired />;

@@ -29,6 +29,7 @@ interface AuthState {
   logout: () => void;
   clearError: () => void;
   loadSubscription: () => Promise<void>;
+  validateToken: () => Promise<boolean>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -57,6 +58,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const errorMsg = error.response?.data?.message || error.message || 'Ошибка авторизации';
       set({ error: errorMsg, loading: false, user: null, token: null });
       localStorage.removeItem('auth_token');
+    }
+  },
+  validateToken: async () => {
+    const token = get().token;
+    if (!token) {
+      return false;
+    }
+
+    set({ loading: true });
+    try {
+      const response = await api.post('/auth/verify', {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const { user } = response.data;
+      set({ user, loading: false });
+      return true;
+    } catch {
+      localStorage.removeItem('auth_token');
+      set({ user: null, token: null, loading: false });
+      return false;
     }
   },
   loadSubscription: async () => {
