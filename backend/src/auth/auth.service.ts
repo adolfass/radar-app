@@ -24,7 +24,6 @@ export class AuthService {
       initData ? 'present (' + initData.length + ' chars)' : 'empty',
     );
 
-    // Validate Telegram initData
     const isValid = this.validateTelegramData(initData);
     console.log('InitData valid:', isValid);
 
@@ -33,7 +32,6 @@ export class AuthService {
       throw new Error('Invalid Telegram data');
     }
 
-    // Parse user data from initData
     const urlParams = new URLSearchParams(initData);
     const userJson = urlParams.get('user');
 
@@ -45,7 +43,6 @@ export class AuthService {
     const telegramId = BigInt(userData.id);
     console.log('Telegram user ID:', telegramId);
 
-    // Find or create user
     let user = await this.prisma.user.findUnique({
       where: { telegramId },
     });
@@ -59,11 +56,15 @@ export class AuthService {
           lastName: userData.last_name,
           languageCode: userData.language_code,
           isPremium: userData.is_premium,
-          photoUrl: userData.photo_url,
+          photoUrl: null,
         },
       });
       console.log('Created new user:', user.id);
-    } else if (!user.photoUrl) {
+    }
+
+    // Always try to fetch/update photo from Telegram API
+    const needsPhotoUpdate = !user.photoUrl || user.photoUrl === '';
+    if (needsPhotoUpdate) {
       try {
         const profile = await this.telegramProfileService.lookupById(Number(telegramId));
         if (profile?.photoUrl) {
@@ -71,14 +72,26 @@ export class AuthService {
             where: { id: user.id },
             data: { photoUrl: profile.photoUrl },
           });
-          this.logger.log(`Updated photoUrl for user ${user.id}`);
+          this.logger.log('Updated photoUrl for user ' + user.id);
         }
       } catch (error) {
-        this.logger.warn('Failed to fetch user photo:', error);
+        this.logger.warn('Failed to fetch user photo: ' + error);
       }
     }
 
-    // Generate JWT token
+    // Update user data if changed
+    if (user.firstName !== userData.first_name || user.lastName !== userData.last_name || user.username !== userData.username) {
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          firstName: userData.first_name,
+          lastName: userData.last_name,
+          username: userData.username,
+          isPremium: userData.is_premium,
+        },
+      });
+    }
+
     const token = await this.generateToken(user.id);
 
     return {
@@ -111,19 +124,15 @@ export class AuthService {
       return false;
     }
 
-    // Remove hash from params
     urlParams.delete('hash');
 
-    // Sort params alphabetically
     const sortedParams = Array.from(urlParams.entries())
       .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([key, value]) => `${key}=${value}`)
+      .map(([key, value]) => key + '=' + value)
       .join('\n');
 
-    // Create data check string
     const dataCheckString = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest();
 
-    // Calculate hash
     const calculatedHash = crypto
       .createHmac('sha256', dataCheckString)
       .update(sortedParams)
