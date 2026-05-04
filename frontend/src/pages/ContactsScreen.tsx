@@ -1,11 +1,25 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContacts } from '../hooks/useApi';
+import { TelegramLookup } from '../components/Contacts/TelegramLookup';
+import { api } from '../lib/api';
+
+interface TelegramProfile {
+  telegramId: number;
+  firstName: string;
+  lastName?: string;
+  username?: string;
+  bio?: string;
+  photoUrl?: string;
+  isPremium: boolean;
+  languageCode?: string;
+}
 
 export function ContactsScreen() {
   const navigate = useNavigate();
-  const { contacts, loading, deleteContact, exportVCard } = useContacts();
+  const { contacts, loading, deleteContact, exportVCard, refetch } = useContacts();
   const [searchQuery, setSearchQuery] = useState('');
+  const [showTelegramLookup, setShowTelegramLookup] = useState(false);
 
   const handleExport = async (id: number) => {
     try {
@@ -26,7 +40,7 @@ export function ContactsScreen() {
 
   const handleShare = async (contact: any) => {
     const personalData = contact.personalData ? JSON.parse(contact.personalData) : {};
-    
+
     const shareData = {
       title: contact.businessName || 'Контакт',
       text: `${personalData.fullName || ''} ${contact.businessName ? 'из ' + contact.businessName : ''}`,
@@ -45,12 +59,30 @@ export function ContactsScreen() {
     }
   };
 
+  const handleTelegramProfileFound = async (profile: TelegramProfile) => {
+    try {
+      await api.post('/contacts/add-by-ref', {
+        contactId: profile.telegramId.toString(),
+        refUserId: profile.telegramId.toString(),
+      });
+      setShowTelegramLookup(false);
+      refetch();
+      alert('Контакт добавлен в вашу сеть!');
+    } catch (error: any) {
+      if (error.response?.data?.message === 'Contact already exists') {
+        alert('Этот контакт уже добавлен');
+      } else {
+        alert('Ошибка при добавлении контакта');
+      }
+    }
+  };
+
   const filteredContacts = contacts.filter((contact) => {
     if (!searchQuery) return true;
-    
+
     const personalData = contact.personalData ? JSON.parse(contact.personalData) : {};
     const searchLower = searchQuery.toLowerCase();
-    
+
     return (
       contact.businessName?.toLowerCase().includes(searchLower) ||
       personalData.fullName?.toLowerCase().includes(searchLower) ||
@@ -94,13 +126,33 @@ export function ContactsScreen() {
         >
           ← Назад
         </button>
-        <h1 style={{
-          fontSize: '24px',
-          fontWeight: 'bold',
-          color: 'var(--tg-theme-text-color, #000000)',
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
         }}>
-          Контакты
-        </h1>
+          <h1 style={{
+            fontSize: '24px',
+            fontWeight: 'bold',
+            color: 'var(--tg-theme-text-color, #000000)',
+          }}>
+            Контакты
+          </h1>
+          <button
+            onClick={() => setShowTelegramLookup(true)}
+            style={{
+              padding: '10px 16px',
+              backgroundColor: 'var(--tg-theme-button-color, #2481cc)',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '10px',
+              fontSize: '14px',
+              cursor: 'pointer',
+            }}
+          >
+            ➕ Добавить
+          </button>
+        </div>
       </header>
 
       {/* Search */}
@@ -120,6 +172,7 @@ export function ContactsScreen() {
             borderRadius: '12px',
             backgroundColor: 'var(--tg-theme-secondary-bg-color, #ffffff)',
             color: 'var(--tg-theme-text-color, #000000)',
+            boxSizing: 'border-box',
           }}
         />
       </div>
@@ -132,15 +185,32 @@ export function ContactsScreen() {
           <p style={{
             fontSize: '16px',
             color: 'var(--tg-theme-hint-color, #999999)',
+            marginBottom: '16px',
           }}>
             {searchQuery ? 'Контакты не найдены' : 'У вас пока нет контактов'}
           </p>
+          {!searchQuery && (
+            <button
+              onClick={() => setShowTelegramLookup(true)}
+              style={{
+                padding: '14px 24px',
+                backgroundColor: 'var(--tg-theme-button-color, #2481cc)',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '16px',
+                cursor: 'pointer',
+              }}
+            >
+              🔍 Найти в Telegram
+            </button>
+          )}
         </div>
       ) : (
         <div>
           {filteredContacts.map((contact) => {
             const personalData = contact.personalData ? JSON.parse(contact.personalData) : {};
-            
+
             return (
               <div
                 key={contact.id}
@@ -235,7 +305,7 @@ export function ContactsScreen() {
                       fontSize: '14px',
                     }}
                   >
-                    📥 Экспорт
+                    📥
                   </button>
                   <button
                     onClick={() => handleShare(contact)}
@@ -249,7 +319,7 @@ export function ContactsScreen() {
                       fontSize: '14px',
                     }}
                   >
-                    📤 Поделиться
+                    📤
                   </button>
                   <button
                     onClick={() => {
@@ -274,6 +344,13 @@ export function ContactsScreen() {
             );
           })}
         </div>
+      )}
+
+      {showTelegramLookup && (
+        <TelegramLookup
+          onContactFound={handleTelegramProfileFound}
+          onCancel={() => setShowTelegramLookup(false)}
+        />
       )}
     </div>
   );

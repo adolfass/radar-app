@@ -41,3 +41,4 @@ prisma/migrations/
 # Testing
 coverage/
 .turbo
+frontend-dist/
