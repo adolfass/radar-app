@@ -17,6 +17,7 @@ import { AdminPanel } from './pages/AdminPanel';
 import { SubscriptionScreen } from './pages/SubscriptionScreen';
 import { LoadingScreen } from './components/LoadingScreen';
 import { BottomNav } from './components/BottomNav';
+import { NavigatorScreen } from './components/Navigator/NavigatorScreen';
 
 const NetworkInsights = lazy(() => import('./pages/NetworkInsights').then(m => ({ default: m.NetworkInsights })));
 const NetworkGraph = lazy(() => import('./pages/NetworkGraph').then(m => ({ default: m.NetworkGraph })));
@@ -101,7 +102,7 @@ function AppContent() {
   return <AppRoutes />;
 }
 
-const mainNavPaths = ['/', '/qr-exchange', '/meetings', '/contacts', '/profile'];
+const mainNavPaths = ['/', '/qr-exchange', '/meetings', '/contacts', '/navigator'];
 
 function AppRoutes() {
   const { user } = useAuth();
@@ -124,6 +125,7 @@ function AppRoutes() {
 
         {/* Legacy */}
         <Route path="/profile" element={<ProfileScreen />} />
+        <Route path="/navigator" element={<NavigatorScreen />} />
         <Route path="/card/new" element={<BusinessCardForm />} />
         <Route path="/card/:id/edit" element={<BusinessCardForm />} />
         <Route path="/card/:contactId" element={<CardDetail />} />

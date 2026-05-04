@@ -5,7 +5,7 @@ const navItems = [
   { path: '/qr-exchange', icon: 'qr', label: 'QR' },
   { path: '/meetings', icon: 'meeting', label: 'Встречи' },
   { path: '/contacts', icon: 'contacts', label: 'Контакты' },
-  { path: '/profile', icon: 'profile', label: 'Профиль' },
+  { path: '/navigator', icon: 'navigator', label: 'Навигатор' },
 ];
 
 const icons: Record<string, JSX.Element> = {
@@ -49,6 +49,12 @@ const icons: Record<string, JSX.Element> = {
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  navigator: (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="10" />
+      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
     </svg>
   ),
 };
