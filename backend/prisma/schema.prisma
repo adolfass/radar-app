@@ -18,6 +18,8 @@ model User {
   photoUrl        String?   @map("photo_url")
   isOrganizer     Boolean   @default(false) @map("is_organizer")
   balance         Int       @default(0)
+  phoneHash       String?   @unique @map("phone_hash")
+  allowContactMatching Boolean @default(false) @map("allow_contact_matching")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 

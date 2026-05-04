@@ -21,6 +21,7 @@ import { NetworkGraphModule } from './network-graph/network-graph.module';
 import { HealthModule } from './health/health.module';
 import { Neo4jModule } from './neo4j/neo4j.module';
 import { CryptoPayModule } from './payments/crypto-pay.module';
+import { TelegramProfileModule } from './telegram-profile/telegram-profile.module';
 import { RawBodyMiddleware } from './common/middleware/raw-body.middleware';
 
 @Module({
@@ -61,6 +62,7 @@ import { RawBodyMiddleware } from './common/middleware/raw-body.middleware';
     HealthModule,
     Neo4jModule,
     CryptoPayModule,
+    TelegramProfileModule,
   ],
 })
 export class AppModule implements NestModule {
