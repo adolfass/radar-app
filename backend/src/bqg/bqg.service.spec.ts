@@ -25,10 +25,7 @@ describe('BqgService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        BqgService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [BqgService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     service = module.get<BqgService>(BqgService);
@@ -118,21 +115,25 @@ describe('BqgService', () => {
     it('should throw BadRequestException if quarterEnd before quarterStart', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ id: 1 });
 
-      await expect(service.create(1, {
-        goal: 'Bad',
-        quarterStart: '2026-03-31',
-        quarterEnd: '2026-01-01',
-      })).rejects.toThrow(BadRequestException);
+      await expect(
+        service.create(1, {
+          goal: 'Bad',
+          quarterStart: '2026-03-31',
+          quarterEnd: '2026-01-01',
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw NotFoundException for missing user', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.create(1, {
-        goal: 'Test',
-        quarterStart: '2026-01-01',
-        quarterEnd: '2026-03-31',
-      })).rejects.toThrow(NotFoundException);
+      await expect(
+        service.create(1, {
+          goal: 'Test',
+          quarterStart: '2026-01-01',
+          quarterEnd: '2026-03-31',
+        }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 

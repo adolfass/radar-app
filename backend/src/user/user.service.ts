@@ -147,17 +147,18 @@ export class UserService {
       throw new ForbiddenException('Admin access required');
     }
 
-    const [totalUsers, premiumUsers, organizers, newUsersToday, newUsersThisWeek] = await Promise.all([
-      this.prisma.user.count(),
-      this.prisma.user.count({ where: { isPremium: true } }),
-      this.prisma.user.count({ where: { isOrganizer: true } }),
-      this.prisma.user.count({
-        where: { createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } },
-      }),
-      this.prisma.user.count({
-        where: { createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
-      }),
-    ]);
+    const [totalUsers, premiumUsers, organizers, newUsersToday, newUsersThisWeek] =
+      await Promise.all([
+        this.prisma.user.count(),
+        this.prisma.user.count({ where: { isPremium: true } }),
+        this.prisma.user.count({ where: { isOrganizer: true } }),
+        this.prisma.user.count({
+          where: { createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } },
+        }),
+        this.prisma.user.count({
+          where: { createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
+        }),
+      ]);
 
     return {
       totalUsers,

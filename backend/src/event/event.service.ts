@@ -100,9 +100,7 @@ export class EventService {
 
     // Only organizer can see all participants; others see only their own registration
     if (event.organizerId !== userId) {
-      event.registrations = event.registrations.filter(
-        (reg) => reg.userId === userId,
-      );
+      event.registrations = event.registrations.filter((reg) => reg.userId === userId);
     }
 
     return event;

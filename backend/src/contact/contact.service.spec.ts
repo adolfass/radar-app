@@ -171,13 +171,23 @@ describe('ContactService', () => {
     it('should throw NotFoundException for missing business card', async () => {
       mockPrisma.businessCard.findUnique.mockResolvedValue(null);
 
-      await expect(service.addByRef(1, { contactId: 'missing' })).rejects.toThrow(NotFoundException);
+      await expect(service.addByRef(1, { contactId: 'missing' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should process referral if refUserId provided', async () => {
-      mockPrisma.businessCard.findUnique.mockResolvedValue({ contactId: 'bc1', businessName: 'Test' });
+      mockPrisma.businessCard.findUnique.mockResolvedValue({
+        contactId: 'bc1',
+        businessName: 'Test',
+      });
       mockPrisma.contact.findUnique.mockResolvedValue(null);
-      mockPrisma.contact.create.mockResolvedValue({ id: 1, userId: 1, contactId: 'bc1', privateMeta: null });
+      mockPrisma.contact.create.mockResolvedValue({
+        id: 1,
+        userId: 1,
+        contactId: 'bc1',
+        privateMeta: null,
+      });
 
       await service.addByRef(1, { contactId: 'bc1', refUserId: '42' });
 
@@ -185,9 +195,17 @@ describe('ContactService', () => {
     });
 
     it('should encrypt privateMeta when provided', async () => {
-      mockPrisma.businessCard.findUnique.mockResolvedValue({ contactId: 'bc1', businessName: 'Test' });
+      mockPrisma.businessCard.findUnique.mockResolvedValue({
+        contactId: 'bc1',
+        businessName: 'Test',
+      });
       mockPrisma.contact.findUnique.mockResolvedValue(null);
-      mockPrisma.contact.create.mockResolvedValue({ id: 1, userId: 1, contactId: 'bc1', privateMeta: 'encrypted_{"оис":"Опасен"}' });
+      mockPrisma.contact.create.mockResolvedValue({
+        id: 1,
+        userId: 1,
+        contactId: 'bc1',
+        privateMeta: 'encrypted_{"оис":"Опасен"}',
+      });
 
       await service.addByRef(1, { contactId: 'bc1', privateMeta: { оис: 'Опасен' } });
 
@@ -238,7 +256,8 @@ describe('ContactService', () => {
         id: 1,
         userId: 1,
         businessName: 'Test Corp',
-        personalData: '{"fullName":"John Doe","phone":"+1234567890","email":"john@test.com","position":"CEO"}',
+        personalData:
+          '{"fullName":"John Doe","phone":"+1234567890","email":"john@test.com","position":"CEO"}',
         resources: '{"website":"https://test.com"}',
       };
 

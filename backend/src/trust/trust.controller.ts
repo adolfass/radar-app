@@ -19,10 +19,7 @@ export class TrustController {
   constructor(private trustService: TrustService) {}
 
   @Post('log')
-  async logInteraction(
-    @Request() req,
-    @Body() logTrustDto: LogTrustDto,
-  ) {
+  async logInteraction(@Request() req, @Body() logTrustDto: LogTrustDto) {
     return this.trustService.logInteraction(
       req.user.userId,
       logTrustDto.contactId,
@@ -33,26 +30,17 @@ export class TrustController {
   }
 
   @Get('balance/:contactId')
-  async getTrustBalance(
-    @Request() req,
-    @Param('contactId', ParseIntPipe) contactId: number,
-  ) {
+  async getTrustBalance(@Request() req, @Param('contactId', ParseIntPipe) contactId: number) {
     return this.trustService.getTrustBalance(req.user.userId, contactId);
   }
 
   @Get('history')
-  async getTrustHistory(
-    @Request() req,
-    @Query('contactId', ParseIntPipe) contactId?: number,
-  ) {
+  async getTrustHistory(@Request() req, @Query('contactId', ParseIntPipe) contactId?: number) {
     return this.trustService.getTrustHistory(req.user.userId, contactId);
   }
 
   @Get('top')
-  async getTopTrustedContacts(
-    @Request() req,
-    @Query('limit', ParseIntPipe) limit?: number,
-  ) {
+  async getTopTrustedContacts(@Request() req, @Query('limit', ParseIntPipe) limit?: number) {
     return this.trustService.getTopTrustedContacts(req.user.userId, limit);
   }
 }

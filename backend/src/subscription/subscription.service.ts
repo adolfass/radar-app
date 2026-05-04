@@ -73,9 +73,7 @@ export class SubscriptionService {
 
     const premiumMonths = months || 1;
     const now = new Date();
-    const baseDate = existing.expiresAt && existing.expiresAt > now
-      ? existing.expiresAt
-      : now;
+    const baseDate = existing.expiresAt && existing.expiresAt > now ? existing.expiresAt : now;
     const expiresAt = new Date(baseDate.getTime() + premiumMonths * 30 * 24 * 60 * 60 * 1000);
 
     const subscription = await this.prisma.subscription.update({
@@ -92,9 +90,8 @@ export class SubscriptionService {
 
   async checkContactLimit(userId: number, currentCount: number) {
     const subscription = await this.getSubscription(userId);
-    const limit = subscription.plan === 'premium'
-      ? this.CONTACT_LIMIT_PREMIUM
-      : this.CONTACT_LIMIT_FREE;
+    const limit =
+      subscription.plan === 'premium' ? this.CONTACT_LIMIT_PREMIUM : this.CONTACT_LIMIT_FREE;
 
     return {
       allowed: currentCount < limit,

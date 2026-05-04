@@ -23,10 +23,7 @@ describe('MeetingService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        MeetingService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [MeetingService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     service = module.get<MeetingService>(MeetingService);
@@ -49,7 +46,9 @@ describe('MeetingService', () => {
       expect(result).toEqual(meetings);
       expect(mockPrisma.meeting.findMany).toHaveBeenCalledWith({
         where: { userId: 1 },
-        include: { user: { select: { id: true, firstName: true, lastName: true, username: true } } },
+        include: {
+          user: { select: { id: true, firstName: true, lastName: true, username: true } },
+        },
         orderBy: { scheduledAt: 'desc' },
       });
     });
@@ -61,7 +60,9 @@ describe('MeetingService', () => {
 
       expect(mockPrisma.meeting.findMany).toHaveBeenCalledWith({
         where: { userId: 1, status: 'completed' },
-        include: { user: { select: { id: true, firstName: true, lastName: true, username: true } } },
+        include: {
+          user: { select: { id: true, firstName: true, lastName: true, username: true } },
+        },
         orderBy: { scheduledAt: 'desc' },
       });
     });
@@ -157,7 +158,9 @@ describe('MeetingService', () => {
     it('should throw NotFoundException when meeting not found', async () => {
       mockPrisma.meeting.findUnique.mockResolvedValue(null);
 
-      await expect(service.update(1, 1, { status: MeetingStatus.COMPLETED })).rejects.toThrow(NotFoundException);
+      await expect(service.update(1, 1, { status: MeetingStatus.COMPLETED })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

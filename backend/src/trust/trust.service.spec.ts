@@ -21,10 +21,7 @@ describe('TrustService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        TrustService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [TrustService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     service = module.get<TrustService>(TrustService);
@@ -65,13 +62,17 @@ describe('TrustService', () => {
     it('should throw NotFoundException for missing contact', async () => {
       mockPrisma.contact.findUnique.mockResolvedValue(null);
 
-      await expect(service.logInteraction(1, 999, 'you_helped', undefined, 10)).rejects.toThrow(NotFoundException);
+      await expect(service.logInteraction(1, 999, 'you_helped', undefined, 10)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException for wrong userId', async () => {
       mockPrisma.contact.findUnique.mockResolvedValue({ id: 1, userId: 2 });
 
-      await expect(service.logInteraction(1, 1, 'you_helped', undefined, 10)).rejects.toThrow(BadRequestException);
+      await expect(service.logInteraction(1, 1, 'you_helped', undefined, 10)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 

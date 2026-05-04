@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -107,30 +103,22 @@ export class RitualService {
     ).length;
 
     const supportCircle = contacts.filter((c) => c.circle === 'support').length;
-    const productivityCircle = contacts.filter(
-      (c) => c.circle === 'productivity',
-    ).length;
-    const developmentCircle = contacts.filter(
-      (c) => c.circle === 'development',
-    ).length;
+    const productivityCircle = contacts.filter((c) => c.circle === 'productivity').length;
+    const developmentCircle = contacts.filter((c) => c.circle === 'development').length;
 
     const diversity =
       totalContacts > 0
-        ? (1 - Math.max(supportCircle, productivityCircle, developmentCircle) / totalContacts)
+        ? 1 - Math.max(supportCircle, productivityCircle, developmentCircle) / totalContacts
         : 0;
 
-    const freshness =
-      totalContacts > 0 ? activeContacts / totalContacts : 0;
+    const freshness = totalContacts > 0 ? activeContacts / totalContacts : 0;
 
     const trustInteractions = await this.prisma.trustInteraction.findMany({
       where: { userId },
       select: { balanceDelta: true },
     });
 
-    const trustBalance = trustInteractions.reduce(
-      (sum, i) => sum + i.balanceDelta,
-      0,
-    );
+    const trustBalance = trustInteractions.reduce((sum, i) => sum + i.balanceDelta, 0);
 
     const density = totalContacts > 1 ? Math.min(1, (totalContacts - 1) / 100) : 0;
 

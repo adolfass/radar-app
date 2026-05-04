@@ -1,5 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AiClassifierService, ContactCircle, ContactRole, RecommendationType } from './ai-classifier.service';
+import {
+  AiClassifierService,
+  ContactCircle,
+  ContactRole,
+  RecommendationType,
+} from './ai-classifier.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 describe('AiClassifierService', () => {
@@ -17,10 +22,7 @@ describe('AiClassifierService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        AiClassifierService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [AiClassifierService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     service = module.get<AiClassifierService>(AiClassifierService);

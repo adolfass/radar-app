@@ -95,7 +95,7 @@ export class Neo4jService implements OnModuleInit, OnModuleDestroy {
     `;
 
     const result = await this.run(query, { userId });
-    return result.records.map(record => ({
+    return result.records.map((record) => ({
       id: record.get('id').toNumber(),
       name: record.get('name'),
       circle: record.get('circle'),

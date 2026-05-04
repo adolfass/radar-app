@@ -45,7 +45,7 @@ export class CryptoPayController {
     @Headers('crypto-pay-api-signature') signature: string,
   ) {
     const rawBody = req.rawBody?.toString() || '';
-    
+
     if (!rawBody) {
       throw new BadRequestException('Empty request body');
     }

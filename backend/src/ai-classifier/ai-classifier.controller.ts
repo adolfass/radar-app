@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  UseGuards,
-  Request,
-  ParseIntPipe,
-} from '@nestjs/common';
+import { Controller, Get, Param, UseGuards, Request, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AiClassifierService, ContactAnalysis, NetworkSummary } from './ai-classifier.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -19,7 +12,10 @@ export class AiClassifierController {
 
   @Get('classify/:contactId')
   @ApiOperation({ summary: 'Classify a single contact' })
-  async classifyContact(@Param('contactId', ParseIntPipe) contactId: number, @Request() req): Promise<ContactAnalysis> {
+  async classifyContact(
+    @Param('contactId', ParseIntPipe) contactId: number,
+    @Request() req,
+  ): Promise<ContactAnalysis> {
     return this.aiClassifierService.classifyContact(contactId, req.user.userId);
   }
 

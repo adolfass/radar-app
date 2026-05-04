@@ -36,9 +36,9 @@ interface WebhookPayload {
 @Injectable()
 export class CryptoPayService {
   private readonly logger = new Logger(CryptoPayService.name);
-  private readonly apiUrl: string;
-  private readonly appToken: string;
-  private readonly webhookSecret: string;
+  private readonly apiUrl = 'https://pay.crypt.bot/api';
+  private readonly apiToken: string;
+  private readonly testnet: boolean;
 
   private readonly PLAN_PRICES_USDT: Record<string, number> = {
     premium_monthly: 0.65,
@@ -60,9 +60,8 @@ export class CryptoPayService {
     private prisma: PrismaService,
     private subscriptionService: SubscriptionService,
   ) {
-    this.apiUrl = this.configService.get('CRYPTOPAY_API_URL', 'https://pay.crypt.bot/api');
-    this.appToken = this.configService.get('CRYPTOPAY_APP_TOKEN', '');
-    this.webhookSecret = this.configService.get('CRYPTOPAY_WEBHOOK_SECRET', '');
+    this.apiToken = this.configService.get('CRYPTOPAY_API_TOKEN', '');
+    this.testnet = this.configService.get('CRYPTOPAY_TESTNET', 'false') === 'true';
   }
 
   async createInvoice(params: CreateInvoiceParams) {
@@ -75,6 +74,7 @@ export class CryptoPayService {
     }
 
     const payload = JSON.stringify({ user_id: userId, plan });
+    const siteUrl = this.configService.get('SITE_URL', 'https://radar.strateg.space');
 
     const existingPayment = await this.prisma.cryptoPayment.findFirst({
       where: {
@@ -87,7 +87,9 @@ export class CryptoPayService {
     if (existingPayment) {
       const expiresAt = new Date(existingPayment.createdAt.getTime() + 30 * 60 * 1000);
       if (expiresAt > new Date()) {
-        this.logger.log(`Returning existing pending invoice ${existingPayment.invoiceId} for user ${userId}`);
+        this.logger.log(
+          `Returning existing pending invoice ${existingPayment.invoiceId} for user ${userId}`,
+        );
         return {
           invoice_id: existingPayment.invoiceId,
           pay_url: `https://t.me/CryptoBot?start=pay-${existingPayment.invoiceId}`,
@@ -103,7 +105,7 @@ export class CryptoPayService {
       currency: 'USD',
       description,
       paid_btn_name: 'callback',
-      paid_btn_url: `${this.configService.get('SITE_URL', 'https://radar.strateg.space')}/api/payments/crypto/webhook`,
+      paid_btn_url: `${siteUrl}/api/payments/crypto/webhook`,
       payload,
       allow_comments: false,
       allow_anonymous: false,
@@ -127,7 +129,9 @@ export class CryptoPayService {
       },
     });
 
-    this.logger.log(`Created invoice ${invoice.invoice_id} for user ${userId}, plan: ${plan}, amount: ${amount} USDT`);
+    this.logger.log(
+      `Created invoice ${invoice.invoice_id} for user ${userId}, plan: ${plan}, amount: ${amount} USDT`,
+    );
 
     return {
       invoice_id: invoice.invoice_id,
@@ -173,7 +177,9 @@ export class CryptoPayService {
     const expectedAmount = payment.amountUsdt;
     const receivedAmount = parseFloat(invoice.amount);
     if (Math.abs(receivedAmount - expectedAmount) > 0.01) {
-      this.logger.warn(`Amount mismatch for invoice ${invoice.invoice_id}: expected ${expectedAmount}, got ${receivedAmount}`);
+      this.logger.warn(
+        `Amount mismatch for invoice ${invoice.invoice_id}: expected ${expectedAmount}, got ${receivedAmount}`,
+      );
       await this.prisma.cryptoPayment.update({
         where: { invoiceId: invoice.invoice_id },
         data: { status: 'FAILED' },
@@ -220,17 +226,18 @@ export class CryptoPayService {
   }
 
   private verifySignature(body: string, signature: string): boolean {
-    if (!this.webhookSecret) {
-      this.logger.warn('CRYPTOPAY_WEBHOOK_SECRET not configured, skipping verification');
-      return true;
+    if (!this.apiToken) {
+      this.logger.error('CRYPTOPAY_API_TOKEN not configured');
+      return false;
     }
 
-    const expectedSignature = crypto
-      .createHmac('sha256', this.webhookSecret)
-      .update(body)
-      .digest('hex');
+    const expectedSignature = crypto.createHmac('sha256', this.apiToken).update(body).digest('hex');
 
-    return expectedSignature === signature;
+    const isValid = expectedSignature === signature;
+    if (!isValid) {
+      this.logger.warn(`Signature mismatch. Expected: ${expectedSignature}, Got: ${signature}`);
+    }
+    return isValid;
   }
 
   private async callCryptoPayAPI(method: string, params: Record<string, any>) {
@@ -239,7 +246,7 @@ export class CryptoPayService {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Crypto-Pay-API-Token': this.appToken,
+        'Crypto-Pay-API-Token': this.apiToken,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(params),

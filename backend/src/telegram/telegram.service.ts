@@ -49,10 +49,7 @@ class SocksAgent extends Agent {
                     ? Buffer.from(host.split('.').map(Number))
                     : Buffer.alloc(16),
                 ])
-              : Buffer.concat([
-                  Buffer.from([0x03, host.length]),
-                  Buffer.from(host),
-                ]),
+              : Buffer.concat([Buffer.from([0x03, host.length]), Buffer.from(host)]),
             Buffer.from([(port >> 8) & 0xff, port & 0xff]),
           ]);
           socket.write(connectReq);
@@ -128,8 +125,7 @@ export class TelegramService extends Telegraf<Context> implements OnModuleInit {
                 {
                   text: '🚀 Открыть приложение',
                   web_app: {
-                    url:
-                      this.configService.get('FRONTEND_URL') || 'https://radar.strateg.space',
+                    url: this.configService.get('FRONTEND_URL') || 'https://radar.strateg.space',
                   },
                 },
               ],

@@ -116,7 +116,7 @@ export class AiClassifierService {
       meetingsMap.get(key)!.push(meeting);
     }
 
-    return contacts.map(contact => {
+    return contacts.map((contact) => {
       const meetings = meetingsMap.get(parseInt(contact.contactId, 10)) || [];
       const contactWithMeetings = { ...contact, meetings };
 
@@ -165,7 +165,7 @@ export class AiClassifierService {
     }
 
     const missingRoles = (Object.values(ContactRole) as ContactRole[]).filter(
-      role => roleDistribution[role] === 0,
+      (role) => roleDistribution[role] === 0,
     );
 
     const healthScore = this.calculateHealthScore(analyses, circleDistribution);
@@ -235,7 +235,7 @@ export class AiClassifierService {
     const threshold = 30;
 
     return (Object.values(ContactRole) as ContactRole[]).filter(
-      role => scores[role] >= threshold,
+      (role) => scores[role] >= threshold,
     );
   }
 
@@ -293,10 +293,13 @@ export class AiClassifierService {
     if (resources.decision || resources.authority) score += 30;
 
     const personalData = contact.personalData ? JSON.parse(contact.personalData) : {};
-    if (personalData.position && (personalData.position.includes('директор') ||
+    if (
+      personalData.position &&
+      (personalData.position.includes('директор') ||
         personalData.position.includes('director') ||
         personalData.position.includes('CEO') ||
-        personalData.position.includes('руководитель'))) {
+        personalData.position.includes('руководитель'))
+    ) {
       score += 25;
     }
 
@@ -408,7 +411,7 @@ export class AiClassifierService {
 
     if (developmentRatio >= 0.2 && developmentRatio <= 0.4) score += 10;
 
-    const hasRecommendations = analyses.filter(a => a.recommendation).length;
+    const hasRecommendations = analyses.filter((a) => a.recommendation).length;
     const actionRatio = hasRecommendations / total;
     if (actionRatio < 0.3) score += 10;
     else if (actionRatio > 0.6) score -= 10;

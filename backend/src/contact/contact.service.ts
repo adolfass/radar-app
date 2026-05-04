@@ -21,7 +21,7 @@ export class ContactService {
       ];
     }
     const contacts = await this.prisma.contact.findMany({ where, orderBy: { createdAt: 'desc' } });
-    return contacts.map(contact => this.decryptPrivateMeta(contact));
+    return contacts.map((contact) => this.decryptPrivateMeta(contact));
   }
 
   async findOne(id: number, userId: number) {
@@ -44,7 +44,10 @@ export class ContactService {
       where: { userId_contactId: { userId, contactId } },
     });
     if (existingContact) {
-      return { message: 'Contact already exists', contact: this.decryptPrivateMeta(existingContact) };
+      return {
+        message: 'Contact already exists',
+        contact: this.decryptPrivateMeta(existingContact),
+      };
     }
 
     const encryptedPrivateMeta = privateMeta ? this.encryption.encryptJSON(privateMeta) : null;

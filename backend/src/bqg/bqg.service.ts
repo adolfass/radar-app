@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBqgDto } from './dto/create-bqg.dto';
 import { UpdateBqgDto } from './dto/update-bqg.dto';
@@ -188,7 +184,7 @@ export class BqgService {
       return { total: 0, roles: [], currentBqg: null };
     }
 
-    const currentBqg = bqgs.find(b => b.isActive) || bqgs[0];
+    const currentBqg = bqgs.find((b) => b.isActive) || bqgs[0];
 
     const rolesMap = new Map<string, number>();
 

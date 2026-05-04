@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
@@ -21,23 +21,27 @@ import { NetworkGraphModule } from './network-graph/network-graph.module';
 import { HealthModule } from './health/health.module';
 import { Neo4jModule } from './neo4j/neo4j.module';
 import { CryptoPayModule } from './payments/crypto-pay.module';
+import { RawBodyMiddleware } from './common/middleware/raw-body.middleware';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     LoggerModule.forRoot({
       pinoHttp: {
-        transport: process.env.NODE_ENV !== 'production'
-          ? { target: 'pino-pretty', options: { singleLine: true } }
-          : undefined,
+        transport:
+          process.env.NODE_ENV !== 'production'
+            ? { target: 'pino-pretty', options: { singleLine: true } }
+            : undefined,
         level: process.env.NODE_ENV !== 'production' ? 'debug' : 'info',
         redact: ['req.headers.authorization', 'req.headers.cookie'],
       },
     }),
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 10,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 10,
+      },
+    ]),
     PrismaModule,
     AuthModule,
     UserModule,
@@ -59,4 +63,8 @@ import { CryptoPayModule } from './payments/crypto-pay.module';
     CryptoPayModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RawBodyMiddleware).forRoutes('payments/crypto/webhook');
+  }
+}

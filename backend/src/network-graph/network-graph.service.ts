@@ -44,7 +44,7 @@ export class NetworkGraphService {
       trustByContactId.get(ti.contactId)!.push(ti.balanceDelta);
     }
 
-    const nodes: GraphNode[] = contacts.map(contact => {
+    const nodes: GraphNode[] = contacts.map((contact) => {
       const deltas = trustByContactId.get(contact.id) || [];
       const totalTrust = deltas.reduce((sum, d) => sum + d, 0);
 
@@ -105,7 +105,7 @@ export class NetworkGraphService {
 
     const tagsA = Object.keys(resourcesA);
     const tagsB = Object.keys(resourcesB);
-    const tagOverlap = tagsA.filter(t => tagsB.includes(t)).length;
+    const tagOverlap = tagsA.filter((t) => tagsB.includes(t)).length;
     if (tagOverlap > 0) similarity += 0.2 * Math.min(tagOverlap, 2);
 
     if (a.circle && b.circle && a.circle === b.circle) similarity += 0.15;
