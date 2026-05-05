@@ -1,54 +1,58 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
+import { useAuthStore } from '../store/authStore';
+import { startNativeScanner, parseQrData } from '../utils/qr-scanner';
+import { QRCodeSVG as QRCode } from 'qrcode.react';
+
+const BOT_USERNAME = 'radar_strateg_space_bot';
 
 export function QRExchange() {
   const navigate = useNavigate();
-  const [myCards, setMyCards] = useState<any[]>([]);
-  const [selectedCard, setSelectedCard] = useState<any>(null);
-  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+  const { user } = useAuthStore();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
 
   useEffect(() => {
-    loadCards();
+    setLoading(false);
   }, []);
 
-  const loadCards = async () => {
+  const deeplinkUrl = user?.id 
+    ? `https://t.me/${BOT_USERNAME}?start=contact_${user.id}`
+    : '';
+
+  const handleCopyLink = async () => {
     try {
-      const res = await api.get('/business-cards');
-      setMyCards(res.data);
-      if (res.data.length > 0) {
-        setSelectedCard(res.data[0]);
-        loadQR(res.data[0].contactId);
-      }
-    } catch (err) {
-      console.error('Failed to load cards:', err);
-    } finally {
-      setLoading(false);
+      await navigator.clipboard.writeText(deeplinkUrl);
+      setSuccess('Ссылка скопирована!');
+      setTimeout(() => setSuccess(''), 2000);
+    } catch {
+      setError('Не удалось скопировать');
     }
   };
 
-  const loadQR = async (contactId: string) => {
+  const handleScanContact = async () => {
+    setError('');
     try {
-      const res = await api.get(`/business-cards/qr/${contactId}`);
-      setQrCodeUrl(res.data.qrCodeDataUrl);
-    } catch (err) {
-      console.error('Failed to load QR:', err);
+      await startNativeScanner(
+        (result) => {
+          const parsed = parseQrData(result.data);
+          if (parsed) {
+            navigate(`/scan-confirm/${parsed.userId}`);
+          } else {
+            setError('Неверный QR-код. Используйте визитку RADAR.');
+          }
+        },
+        (err) => {
+          if (err !== 'Сканирование отменено') {
+            setError(err);
+          }
+        }
+      );
+    } catch (err: any) {
+      setError(err.message || 'Ошибка сканирования');
     }
-  };
-
-  const handleSelectCard = (card: any) => {
-    setSelectedCard(card);
-    loadQR(card.contactId);
-  };
-
-  const handleCreateCard = () => {
-    navigate('/card/new');
-  };
-
-  const handleScanContact = () => {
-    // Navigate to contacts to manually add or scan
-    navigate('/contacts');
   };
 
   if (loading) {
@@ -63,106 +67,86 @@ export function QRExchange() {
     <div style={styles.container}>
       {/* Header */}
       <header style={styles.header}>
-        <button onClick={() => navigate('/')} style={styles.backBtn}>
+        <button onClick={() => navigate(-1)} style={styles.backBtn}>
           ← Назад
         </button>
         <h1 style={styles.title}>Обмен визиткой</h1>
       </header>
 
-      {/* Instruction */}
-      <div style={styles.instruction}>
-        <p style={styles.instructionText}>
-          1. Представься собеседнику
-        </p>
-        <p style={styles.instructionText}>
-          2. Дай отсканировать свою визитку
-        </p>
-        <p style={styles.instructionText}>
-          3. Отсканируй визитку собеседника
-        </p>
-      </div>
+      {/* Success message */}
+      {success && (
+        <div style={styles.successToast}>{success}</div>
+      )}
 
-      {/* My Card QR */}
-      <div style={styles.qrSection}>
-        <h2 style={styles.sectionTitle}>Моя визитка</h2>
+      {/* Error message */}
+      {error && (
+        <div style={styles.errorToast}>{error}</div>
+      )}
 
-        {myCards.length === 0 ? (
-          <div style={styles.emptyCard}>
-            <p style={styles.emptyText}>У тебя ещё нет визитки</p>
-            <button onClick={handleCreateCard} style={styles.createBtn}>
-              Создать визитку
-            </button>
-          </div>
-        ) : (
+      {/* Give Card Section */}
+      <section style={styles.section}>
+        <h2 style={styles.sectionTitle}>📤 Дать визитку отсканировать</h2>
+        
+        {deeplinkUrl && (
           <>
-            {/* Card Selector */}
-            {myCards.length > 1 && (
-              <div style={styles.cardSelector}>
-                {myCards.map((card) => (
-                  <button
-                    key={card.id}
-                    onClick={() => handleSelectCard(card)}
-                    style={{
-                      ...styles.cardOption,
-                      ...(selectedCard?.id === card.id ? styles.cardOptionActive : {}),
-                    }}
-                  >
-                    {card.businessName || 'Без названия'}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* QR Code */}
             <div style={styles.qrContainer}>
-              {qrCodeUrl ? (
-                <img src={qrCodeUrl} alt="QR Code" style={styles.qrImage} />
-              ) : (
-                <div style={styles.qrPlaceholder}>
-                  <span style={{ fontSize: '48px' }}>📱</span>
-                  <p>QR-код загружается...</p>
-                </div>
-              )}
+              <QRCode 
+                value={deeplinkUrl} 
+                size={220}
+                level="M"
+                includeMargin={false}
+              />
             </div>
 
-            {/* Card Info */}
-            {selectedCard && (
-              <div style={styles.cardInfo}>
-                <h3 style={styles.cardName}>{selectedCard.businessName}</h3>
-                {selectedCard.personalData && (
-                  <p style={styles.cardPersonal}>
-                    {(() => {
-                      try {
-                        const data = JSON.parse(selectedCard.personalData);
-                        return [data.fullName, data.position].filter(Boolean).join(' • ');
-                      } catch {
-                        return '';
-                      }
-                    })()}
-                  </p>
-                )}
-                <p style={styles.cardId}>ID: {selectedCard.contactId}</p>
+            <div style={styles.linkContainer}>
+              <p style={styles.linkLabel}>Ссылка-визитка:</p>
+              <div style={styles.linkRow}>
+                <input 
+                  type="text" 
+                  value={deeplinkUrl} 
+                  readOnly 
+                  style={styles.linkInput}
+                />
+                <button onClick={handleCopyLink} style={styles.copyBtn}>
+                  📋
+                </button>
               </div>
-            )}
+            </div>
+
+            <p style={styles.hint}>
+              Покажи этот QR-код собеседнику для сканирования
+            </p>
           </>
         )}
+      </section>
+
+      {/* Divider */}
+      <div style={styles.divider}>
+        <span style={styles.dividerText}>или</span>
       </div>
 
-      {/* Actions */}
-      <div style={styles.actions}>
-        <button onClick={handleScanContact} style={styles.actionBtn}>
-          <span style={styles.actionIcon}>📷</span>
-          <span>Добавить контакт</span>
+      {/* Scan Section */}
+      <section style={styles.section}>
+        <h2 style={styles.sectionTitle}>📷 Отсканировать визитку собеседника</h2>
+        
+        <button onClick={handleScanContact} style={styles.scanBtn}>
+          <span style={styles.scanIcon}>📷</span>
+          <span>Запустить сканер</span>
         </button>
-        {selectedCard && (
-          <button
-            onClick={() => navigate(`/card/${selectedCard.id}/edit`)}
-            style={styles.actionBtnSecondary}
-          >
-            <span style={styles.actionIcon}>✏️</span>
-            <span>Редактировать</span>
-          </button>
-        )}
+        
+        <p style={styles.hint}>
+          Наведите камеру на QR-код визитки собеседника
+        </p>
+      </section>
+
+      {/* Instructions */}
+      <div style={styles.instruction}>
+        <p style={styles.instructionTitle}>Как это работает:</p>
+        <ol style={styles.instructionList}>
+          <li>Покажи свой QR-код — собеседник сканирует и видит твою визитку</li>
+          <li>Отсканируй QR-код собеседника — его визитка добавится в твою сеть</li>
+          <li>Также работает ссылка — можно отправить в чат</li>
+        </ol>
       </div>
     </div>
   );
@@ -173,7 +157,7 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: '100vh',
     backgroundColor: 'var(--radar-bg)',
     padding: '16px',
-    paddingBottom: 'calc(16px + var(--radar-safe-bottom))',
+    paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
   },
   loadingText: {
     textAlign: 'center',
@@ -195,69 +179,36 @@ const styles: Record<string, React.CSSProperties> = {
   title: {
     fontSize: '24px',
     fontWeight: '700',
+    color: 'var(--radar-text)',
   },
-  instruction: {
-    backgroundColor: 'var(--radar-surface)',
-    border: '1px solid var(--radar-border)',
+  successToast: {
+    backgroundColor: 'rgba(48, 209, 88, 0.15)',
+    border: '1px solid rgba(48, 209, 88, 0.3)',
+    color: '#30d158',
+    padding: '12px 16px',
     borderRadius: '12px',
-    padding: '16px',
-    marginBottom: '24px',
-  },
-  instructionText: {
+    marginBottom: '16px',
     fontSize: '14px',
-    color: 'var(--radar-text-secondary)',
-    marginBottom: '8px',
-    lineHeight: '1.4',
+    fontWeight: '500',
   },
-  qrSection: {
+  errorToast: {
+    backgroundColor: 'rgba(255, 59, 48, 0.15)',
+    border: '1px solid rgba(255, 59, 48, 0.3)',
+    color: '#ff3b30',
+    padding: '12px 16px',
+    borderRadius: '12px',
+    marginBottom: '16px',
+    fontSize: '14px',
+    fontWeight: '500',
+  },
+  section: {
     marginBottom: '24px',
   },
   sectionTitle: {
     fontSize: '18px',
     fontWeight: '700',
     marginBottom: '16px',
-  },
-  emptyCard: {
-    backgroundColor: 'var(--radar-surface)',
-    border: '1px solid var(--radar-border)',
-    borderRadius: '12px',
-    padding: '32px 16px',
-    textAlign: 'center',
-  },
-  emptyText: {
-    fontSize: '16px',
-    color: 'var(--radar-text-secondary)',
-    marginBottom: '16px',
-  },
-  createBtn: {
-    padding: '14px 24px',
-    backgroundColor: 'var(--radar-accent)',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '12px',
-    fontSize: '15px',
-    fontWeight: '600',
-  },
-  cardSelector: {
-    display: 'flex',
-    gap: '8px',
-    marginBottom: '16px',
-    overflowX: 'auto',
-    paddingBottom: '8px',
-  },
-  cardOption: {
-    padding: '10px 16px',
-    backgroundColor: 'var(--radar-surface)',
-    border: '1px solid var(--radar-border)',
-    borderRadius: '20px',
-    fontSize: '14px',
-    color: 'var(--radar-text-secondary)',
-    whiteSpace: 'nowrap',
-  },
-  cardOptionActive: {
-    backgroundColor: 'var(--radar-accent)',
-    borderColor: 'var(--radar-accent)',
-    color: '#fff',
+    color: 'var(--radar-text)',
   },
   qrContainer: {
     backgroundColor: '#fff',
@@ -268,66 +219,88 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     marginBottom: '16px',
   },
-  qrImage: {
-    width: '280px',
-    height: '280px',
-    objectFit: 'contain',
+  linkContainer: {
+    marginBottom: '12px',
   },
-  qrPlaceholder: {
-    textAlign: 'center',
-    color: '#333',
-  },
-  cardInfo: {
-    backgroundColor: 'var(--radar-surface)',
-    border: '1px solid var(--radar-border)',
-    borderRadius: '12px',
-    padding: '16px',
-  },
-  cardName: {
-    fontSize: '18px',
-    fontWeight: '600',
-    marginBottom: '4px',
-  },
-  cardPersonal: {
-    fontSize: '14px',
+  linkLabel: {
+    fontSize: '12px',
     color: 'var(--radar-text-secondary)',
     marginBottom: '8px',
   },
-  cardId: {
-    fontSize: '12px',
-    color: 'var(--radar-text-tertiary)',
-    fontFamily: 'monospace',
-  },
-  actions: {
+  linkRow: {
     display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
+    gap: '8px',
   },
-  actionBtn: {
+  linkInput: {
+    flex: 1,
+    padding: '10px 12px',
+    backgroundColor: 'var(--radar-surface)',
+    border: '1px solid var(--radar-border)',
+    borderRadius: '8px',
+    color: 'var(--radar-text)',
+    fontSize: '13px',
+  },
+  copyBtn: {
+    padding: '10px 14px',
+    backgroundColor: 'var(--radar-accent)',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '18px',
+    cursor: 'pointer',
+  },
+  hint: {
+    fontSize: '13px',
+    color: 'var(--radar-text-tertiary)',
+    textAlign: 'center',
+  },
+  divider: {
     display: 'flex',
     alignItems: 'center',
+    margin: '24px 0',
+  },
+  dividerText: {
+    margin: '0 auto',
+    padding: '0 16px',
+    backgroundColor: 'var(--radar-bg)',
+    color: 'var(--radar-text-tertiary)',
+    fontSize: '14px',
+  },
+  scanBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: '12px',
-    padding: '16px',
+    width: '100%',
+    padding: '18px',
     backgroundColor: 'var(--radar-accent)',
     color: '#fff',
     border: 'none',
     borderRadius: '12px',
     fontSize: '16px',
     fontWeight: '600',
+    cursor: 'pointer',
+    marginBottom: '12px',
   },
-  actionBtnSecondary: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '16px',
+  scanIcon: {
+    fontSize: '22px',
+  },
+  instruction: {
     backgroundColor: 'var(--radar-surface)',
-    color: 'var(--radar-text)',
     border: '1px solid var(--radar-border)',
     borderRadius: '12px',
-    fontSize: '16px',
-    fontWeight: '600',
+    padding: '16px',
   },
-  actionIcon: {
-    fontSize: '20px',
+  instructionTitle: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: 'var(--radar-text)',
+    marginBottom: '12px',
+  },
+  instructionList: {
+    margin: 0,
+    paddingLeft: '20px',
+    fontSize: '13px',
+    color: 'var(--radar-text-secondary)',
+    lineHeight: '1.6',
   },
 };

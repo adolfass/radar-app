@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthDto } from './dto/auth.dto';
 import { TelegramProfileService } from '../telegram-profile/telegram-profile.service';
+import { ReferralService } from '../referral/referral.service';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -15,6 +16,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private telegramProfileService: TelegramProfileService,
+    private referralService: ReferralService,
   ) {}
 
   async validateUser(authDto: AuthDto) {
@@ -54,6 +56,16 @@ export class AuthService {
           photoUrl: null,
         },
       });
+
+      const startParam = urlParams.get('start_param');
+      if (startParam && startParam.startsWith('ref_')) {
+        try {
+          await this.referralService.processStartParam(startParam, user.id);
+          this.logger.log(`Referral tracked for user ${user.id}`);
+        } catch (error) {
+          this.logger.warn(`Failed to track referral: ${error.message}`);
+        }
+      }
     }
 
     const needsPhotoUpdate = !user.photoUrl || user.photoUrl === '';

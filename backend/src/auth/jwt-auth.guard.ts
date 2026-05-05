@@ -49,6 +49,7 @@ export class JwtAuthGuard implements CanActivate {
 
       request['user'] = {
         ...user,
+        userId: user.id,
         telegramId: user.telegramId.toString(),
       };
     } catch (error) {

@@ -126,4 +126,56 @@ export class ContactService {
     }
     return contact;
   }
+
+  async getPublicProfile(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        username: true,
+        photoUrl: true,
+      },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return {
+      id: user.id,
+      name: [user.firstName, user.lastName].filter(Boolean).join(' ') || user.username || 'Unknown',
+      username: user.username,
+      photoUrl: user.photoUrl,
+    };
+  }
+
+  async addByQrExchange(userId: number, targetUserId: number) {
+    const existing = await this.prisma.contact.findFirst({
+      where: { userId, contactId: `user_${targetUserId}` },
+    });
+    if (existing) {
+      return { success: true, contact: existing, alreadyExists: true, message: 'Контакт уже в сети' };
+    }
+    const targetUser = await this.prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { id: true, firstName: true, lastName: true, username: true, photoUrl: true },
+    });
+    if (!targetUser) {
+      throw new NotFoundException('User not found');
+    }
+    const contact = await this.prisma.contact.create({
+      data: {
+        userId,
+        contactId: `user_${targetUserId}`,
+        businessName: [targetUser.firstName, targetUser.lastName].filter(Boolean).join(' ') || targetUser.username || 'Unknown',
+        personalData: JSON.stringify({
+          fullName: [targetUser.firstName, targetUser.lastName].filter(Boolean).join(' '),
+          username: targetUser.username,
+        }),
+        resources: JSON.stringify({}),
+        isActive: true,
+      },
+    });
+    return { success: true, contact, alreadyExists: false, message: 'Контакт добавлен' };
+  }
 }

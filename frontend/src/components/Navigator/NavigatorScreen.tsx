@@ -75,6 +75,11 @@ export function NavigatorScreen() {
     navigate('/subscription');
   };
 
+  const handleReferralClick = () => {
+    analytics.track('referral_opened');
+    navigate('/referral');
+  };
+
   const completedCount = Object.values(checklist).filter(Boolean).length;
   const totalSteps = Object.keys(checklist).length;
 
@@ -405,6 +410,24 @@ export function NavigatorScreen() {
             }}
           >
             Попробовать 14 дней бесплатно
+          </button>
+
+          <button
+            onClick={handleReferralClick}
+            style={{
+              width: '100%',
+              marginTop: '12px',
+              padding: '14px',
+              backgroundColor: 'rgba(139, 92, 246, 0.2)',
+              color: '#a855f7',
+              border: '1px solid rgba(139, 92, 246, 0.3)',
+              borderRadius: '12px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+            }}
+          >
+            🎁 Мои звёзды и рефералы
           </button>
         </div>
       </AccordionSection>

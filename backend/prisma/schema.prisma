@@ -42,6 +42,15 @@ model User {
   networkSnapshots NetworkHealthSnapshot[]
   meetings        Meeting[]
 
+  // Referral system
+  referralCode      String?   @unique @map("referral_code")
+  referredById      String?   @map("referred_by_id")
+  earnedStars       Int       @default(0) @map("earned_stars")
+  redeemedStars     Int       @default(0) @map("redeemed_stars")
+
+  referralEvents    ReferralEvent[] @relation("ReferrerEvents")
+  referredEvents    ReferralEvent[] @relation("ReferredEvents")
+
   @@map("users")
 }
 
@@ -247,6 +256,28 @@ model ReferralLog {
   referrer    User      @relation(fields: [referrerId], references: [id], onDelete: Cascade, name: "ReferralLogReferrer")
 
   @@map("referral_logs")
+}
+
+enum ReferralStatus {
+  PENDING
+  ACTIVE
+  CANCELLED
+}
+
+model ReferralEvent {
+  id          String   @id @default(cuid())
+  referrerId  Int      @map("referrer_id")
+  referredId Int      @map("referred_id")
+  starsAwarded Int     @default(1) @map("stars_awarded")
+  status      ReferralStatus @default(PENDING)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  referrer    User     @relation("ReferrerEvents", fields: [referrerId], references: [id], onDelete: Cascade)
+  referred    User     @relation("ReferredEvents", fields: [referredId], references: [id], onDelete: Cascade)
+
+  @@unique([referrerId, referredId])
+  @@index([status])
+  @@map("referral_events")
 }
 
 model Event {

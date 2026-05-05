@@ -67,4 +67,18 @@ export class ContactController {
     const validated = validateWithZod(UpdateContactSchema, body);
     return { valid: true, data: validated, message: 'Validation passed' };
   }
+
+  @Get('public/:userId')
+  async getPublicProfile(@Param('userId', ParseIntPipe) userId: number) {
+    return this.contactService.getPublicProfile(userId);
+  }
+
+  @Post('qr-exchange')
+  @UseGuards(JwtAuthGuard)
+  async qrExchange(@Request() req, @Body() body: { targetUserId: number }) {
+    if (body.targetUserId === req.user.userId) {
+      return { success: false, message: 'Нельзя добавить самого себя' };
+    }
+    return this.contactService.addByQrExchange(req.user.userId, body.targetUserId);
+  }
 }

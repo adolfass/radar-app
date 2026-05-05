@@ -15,6 +15,8 @@ import { EventsScreen } from './pages/EventsScreen';
 import { ContactsScreen } from './pages/ContactsScreen';
 import { AdminPanel } from './pages/AdminPanel';
 import { SubscriptionScreen } from './pages/SubscriptionScreen';
+import { ScanConfirm } from './pages/ScanConfirm';
+import { ReferralScreen } from './pages/ReferralScreen';
 import { LoadingScreen } from './components/LoadingScreen';
 import { BottomNav } from './components/BottomNav';
 import { NavigatorScreen } from './components/Navigator/NavigatorScreen';
@@ -63,7 +65,13 @@ function AppContent() {
       const startParam = sessionStorage.getItem('startapp_param');
       if (startParam) {
         sessionStorage.removeItem('startapp_param');
-        navigate(`/card/${startParam}`);
+        // Handle QR exchange format: contact_12345
+        if (startParam.startsWith('contact_')) {
+          const userId = startParam.replace('contact_', '');
+          navigate(`/scan-confirm/${userId}`);
+        } else {
+          navigate(`/card/${startParam}`);
+        }
       }
     }
   }, [user, navigate]);
@@ -140,6 +148,8 @@ function AppRoutes() {
         <Route path="/contacts" element={<ContactsScreen />} />
         <Route path="/admin" element={user?.isOrganizer ? <AdminPanel /> : <Navigate to="/" />} />
         <Route path="/subscription" element={<SubscriptionScreen />} />
+        <Route path="/scan-confirm/:userId" element={<ScanConfirm />} />
+        <Route path="/referral" element={<ReferralScreen />} />
       </Routes>
       {showBottomNav && <BottomNav />}
     </>
