@@ -34,25 +34,37 @@ export function QRExchange() {
 
   const handleScanContact = async () => {
     setError('');
-    try {
-      await startNativeScanner(
-        (result) => {
-          const parsed = parseQrData(result.data);
-          if (parsed) {
-            navigate(`/scan-confirm/${parsed.userId}`);
-          } else {
-            setError('Неверный QR-код. Используйте визитку RADAR.');
+    const tg = (window as any).Telegram?.WebApp;
+    
+    console.log('[QR] scanQrPopup available:', !!tg?.scanQrPopup);
+    console.log('[QR] WebApp version:', tg?.version);
+    
+    // Try Telegram's native scanner first
+    if (tg?.scanQrPopup) {
+      try {
+        await startNativeScanner(
+          (result) => {
+            const parsed = parseQrData(result.data);
+            if (parsed) {
+              navigate(`/scan-confirm/${parsed.userId}`);
+            } else {
+              setError('Неверный QR-код. Используйте визитку RADAR.');
+            }
+          },
+          (err) => {
+            if (err !== 'Сканирование отменено') {
+              setError(err);
+            }
           }
-        },
-        (err) => {
-          if (err !== 'Сканирование отменено') {
-            setError(err);
-          }
-        }
-      );
-    } catch (err: any) {
-      setError(err.message || 'Ошибка сканирования');
+        );
+        return;
+      } catch (err) {
+        console.log('[QR] Native scanner failed, trying fallback');
+      }
     }
+    
+    // Fallback: use window.location with manual URL input
+    setError('Введите ссылку-визитку вручную в боте @radar_strateg_bot');
   };
 
   if (loading) {
