@@ -5,12 +5,14 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UserModule } from '../user/user.module';
 import { TelegramProfileModule } from '../telegram-profile/telegram-profile.module';
+import { ReferralModule } from '../referral/referral.module';
 
 @Global()
 @Module({
   imports: [
     UserModule,
     TelegramProfileModule,
+    ReferralModule,
     JwtModule.registerAsync({
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get('JWT_SECRET') || 'secret',
