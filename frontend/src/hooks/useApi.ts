@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 
+type BusinessCard = Record<string, unknown>;
+type Contact = Record<string, unknown>;
+type Event = Record<string, unknown>;
+type ReferralStats = Record<string, unknown>;
+
 export function useBusinessCards() {
-  const [cards, setCards] = useState<any[]>([]);
+  const [cards, setCards] = useState<BusinessCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -12,20 +17,21 @@ export function useBusinessCards() {
       const response = await api.get('/business-cards');
       setCards(response.data);
       setError(null);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load business cards');
+    } catch (err) {
+      const error = err as ApiError;
+      setError(error.response?.data?.message || 'Failed to load business cards');
     } finally {
       setLoading(false);
     }
   };
 
-  const createCard = async (data: any) => {
+  const createCard = async (data: Partial<BusinessCard>) => {
     const response = await api.post('/business-cards', data);
     await fetchCards();
     return response.data;
   };
 
-  const updateCard = async (id: number, data: any) => {
+  const updateCard = async (id: number, data: Partial<BusinessCard>) => {
     const response = await api.put(`/business-cards/${id}`, data);
     await fetchCards();
     return response.data;
@@ -44,7 +50,7 @@ export function useBusinessCards() {
 }
 
 export function useContacts() {
-  const [contacts, setContacts] = useState<any[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchContacts = async (search?: string) => {
@@ -82,7 +88,7 @@ export function useContacts() {
 }
 
 export function useEvents() {
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchEvents = async () => {
@@ -113,7 +119,7 @@ export function useEvents() {
 }
 
 export function useReferrals() {
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<ReferralStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchStats = async () => {

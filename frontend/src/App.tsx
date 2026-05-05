@@ -42,7 +42,7 @@ function AppContent() {
   const [authAttempted, setAuthAttempted] = useState(false);
 
   useEffect(() => {
-    const tg = (window as any).Telegram?.WebApp;
+    const tg = (window as unknown as { Telegram?: { WebApp?: { initData?: string } } }).Telegram?.WebApp;
     const isTgApp = !!(tg && tg.initData && tg.initData !== '');
     setIsTelegram(isTgApp);
 

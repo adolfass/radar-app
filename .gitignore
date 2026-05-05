@@ -43,3 +43,4 @@ coverage/
 .turbo
 frontend-dist/
 frontend/assets/
+.gitnexus

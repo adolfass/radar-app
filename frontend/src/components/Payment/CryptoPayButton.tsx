@@ -5,9 +5,10 @@ interface CryptoPayButtonProps {
   plan: 'premium_monthly' | 'premium_yearly';
   onSuccess?: () => void;
   onError?: (error: string) => void;
+  compact?: boolean;
 }
 
-export function CryptoPayButton({ plan, onSuccess, onError }: CryptoPayButtonProps) {
+export function CryptoPayButton({ plan, onSuccess, onError, compact = false }: CryptoPayButtonProps) {
   const [loading, setLoading] = useState(false);
 
   const planLabels: Record<string, { label: string; price: string; period: string }> = {
@@ -60,24 +61,27 @@ export function CryptoPayButton({ plan, onSuccess, onError }: CryptoPayButtonPro
 
   const planInfo = planLabels[plan];
 
+  const buttonStyle: React.CSSProperties = compact
+    ? { ...styles.button, padding: '8px 12px', background: 'transparent', border: '1px solid #6366f1', color: '#6366f1' }
+    : { ...styles.button, opacity: loading ? 0.7 : 1 };
+
   return (
-    <button
-      onClick={handlePay}
-      disabled={loading}
-      style={{
-        ...styles.button,
-        opacity: loading ? 0.7 : 1,
-      }}
-    >
-      <span style={styles.icon}>💎</span>
-      <span style={styles.content}>
-        <span style={styles.label}>
-          {loading ? 'Создаю счёт...' : `Оплатить ${planInfo.label}`}
-        </span>
-        <span style={styles.price}>
-          {planInfo.price}{planInfo.period}
-        </span>
-      </span>
+    <button onClick={handlePay} disabled={loading} style={buttonStyle}>
+      {compact ? (
+        <span style={{ fontSize: '12px' }}>CryptoBot</span>
+      ) : (
+        <>
+          <span style={styles.icon}>💎</span>
+          <span style={styles.content}>
+            <span style={styles.label}>
+              {loading ? 'Создаю счёт...' : `Оплатить ${planInfo.label}`}
+            </span>
+            <span style={styles.price}>
+              {planInfo.price}{planInfo.period}
+            </span>
+          </span>
+        </>
+      )}
     </button>
   );
 }

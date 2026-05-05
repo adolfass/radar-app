@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import {
   AiClassifierService,
   ContactCircle,
@@ -20,9 +21,17 @@ describe('AiClassifierService', () => {
     },
   };
 
+  const mockConfigService = {
+    get: jest.fn().mockReturnValue('http://localhost:11434'),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [AiClassifierService, { provide: PrismaService, useValue: mockPrisma }],
+      providers: [
+        AiClassifierService,
+        { provide: PrismaService, useValue: mockPrisma },
+        { provide: ConfigService, useValue: mockConfigService },
+      ],
     }).compile();
 
     service = module.get<AiClassifierService>(AiClassifierService);

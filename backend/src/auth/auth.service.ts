@@ -27,7 +27,9 @@ export class AuthService {
 
     const urlParams = new URLSearchParams(initData);
     const userJson = urlParams.get('user');
-    const botUsername = urlParams.get('bot_callback_query_id') ? null : (await this.getBotUsernameFromConfig());
+    const botUsername = urlParams.get('bot_callback_query_id')
+      ? null
+      : await this.getBotUsernameFromConfig();
 
     if (!userJson) {
       throw new Error('No user data in initData');
@@ -69,7 +71,11 @@ export class AuthService {
       }
     }
 
-    if (user.firstName !== userData.first_name || user.lastName !== userData.last_name || user.username !== userData.username) {
+    if (
+      user.firstName !== userData.first_name ||
+      user.lastName !== userData.last_name ||
+      user.username !== userData.username
+    ) {
       user = await this.prisma.user.update({
         where: { id: user.id },
         data: {

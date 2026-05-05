@@ -2,11 +2,19 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import * as Sentry from '@sentry/node';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
+
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN || 'http://public@localhost:8001/1',
+    environment: process.env.NODE_ENV || 'development',
+    tracesSampleRate: 1.0,
+  });
+
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
   });

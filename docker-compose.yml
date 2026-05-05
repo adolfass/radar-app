@@ -1,6 +1,39 @@
 version: '3.8'
 
 services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: radar_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+        compress: "true"
+
+  glitchtip:
+    image: glitchtip/glitchtip:latest
+    container_name: radar_glitchtip
+    ports:
+      - "8001:8000"
+    environment:
+      - DATABASE_URL=postgresql://radar:radar_password@radar_postgres:5433/radar_db
+      - SECRET_KEY=glitchtip_secret_key_123
+      - GLITCHTIP_DOMAIN=http://localhost:8001
+    depends_on:
+      - postgres
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
   postgres:
     image: postgres:15-alpine
     container_name: radar_postgres
@@ -39,3 +72,4 @@ volumes:
   redis_data:
   neo4j_data:
   neo4j_logs:
+  ollama_data:

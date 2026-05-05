@@ -20,12 +20,13 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       const payload = await this.jwtService.verifyAsync(token);
-      
-      const expectedBotUsername = this.configService.get('TELEGRAM_BOT_USERNAME') || 'radar_strateg_bot';
+
+      const expectedBotUsername =
+        this.configService.get('TELEGRAM_BOT_USERNAME') || 'radar_strateg_bot';
       if (payload.botUsername && payload.botUsername !== expectedBotUsername) {
         throw new UnauthorizedException('Token from different bot');
       }
-      
+
       request['user'] = payload;
     } catch (error) {
       if (error instanceof UnauthorizedException) {

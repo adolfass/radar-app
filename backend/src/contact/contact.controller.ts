@@ -14,6 +14,8 @@ import {
 import { ContactService } from './contact.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AddContactByRefDto } from './dto/add-contact-by-ref.dto';
+import { CreateContactSchema, UpdateContactSchema } from '../common/validations/zod.schemas';
+import { validateWithZod } from '../common/validations/zod.pipe';
 
 @Controller('contacts')
 @UseGuards(JwtAuthGuard)
@@ -49,8 +51,15 @@ export class ContactController {
     return this.contactService.remove(id, req.user.userId);
   }
 
-  @Get('export/:id')
-  async exportVCard(@Param('id', ParseIntPipe) id: number, @Request() req) {
-    return this.contactService.exportVCard(id, req.user.userId);
+  @Post('validate')
+  async validateContact(@Body() body: unknown) {
+    const validated = validateWithZod(CreateContactSchema, body);
+    return { valid: true, data: validated, message: 'Validation passed' };
+  }
+
+  @Patch(':id/validate')
+  async validateUpdate(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
+    const validated = validateWithZod(UpdateContactSchema, body);
+    return { valid: true, data: validated, message: 'Validation passed' };
   }
 }

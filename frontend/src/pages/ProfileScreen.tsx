@@ -255,7 +255,7 @@ export function ProfileScreen() {
               fontWeight: 'bold',
               color: 'var(--tg-theme-button-color, #2481cc)',
             }}>
-              {stats?.totalPoints || 0}
+              {Number(stats?.totalPoints || 0)}
             </p>
             <p style={{
               fontSize: '12px',
@@ -369,13 +369,13 @@ export function ProfileScreen() {
                     fontWeight: '600',
                     color: 'var(--tg-theme-text-color, #000000)',
                   }}>
-                    {card.businessName || 'Без названия'}
+                    {String(card.businessName || 'Без названия')}
                   </p>
                   <p style={{
                     fontSize: '12px',
                     color: 'var(--tg-theme-hint-color, #999999)',
                   }}>
-                    {card.personalData ? JSON.parse(card.personalData)?.fullName : ''}
+                    {card.personalData ? JSON.parse(String(card.personalData))?.fullName : ''}
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -410,7 +410,7 @@ export function ProfileScreen() {
                   <button
                     onClick={() => {
                       if (confirm('Удалить визитку?')) {
-                        deleteCard(card.id);
+                        deleteCard(Number(card.id));
                       }
                     }}
                     style={{

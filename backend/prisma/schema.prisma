@@ -35,6 +35,7 @@ model User {
   // New mandates
   subscription    Subscription?
   cryptoPayments  CryptoPayment[]
+  telegramStarsPayments TelegramStarsPayment[]
   bqgs            BQG[]
   trustInteractions TrustInteraction[] @relation("UserTrust")
   rituals         ReviewRitual[]
@@ -57,6 +58,7 @@ model Subscription {
 
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   payments    CryptoPayment[]
+  telegramStarsPayments TelegramStarsPayment[]
 
   @@map("subscriptions")
 }
@@ -85,6 +87,33 @@ model CryptoPayment {
   subscriptionId Int?    @map("subscription_id")
 
   @@map("crypto_payments")
+}
+
+enum TelegramStarsPaymentStatus {
+  PENDING
+  PAID
+  EXPIRED
+  FAILED
+}
+
+model TelegramStarsPayment {
+  id            String   @id @default(cuid())
+  userId        Int      @map("user_id")
+  invoiceId     String   @unique @map("invoice_id") // Telegram invoice_id
+  starsAmount   Int      @map("stars_amount") // Amount in Telegram Stars
+  usdAmount     Float    @map("usd_amount") // USD equivalent
+  plan          String   // "premium_monthly" or "premium_yearly"
+  status        TelegramStarsPaymentStatus @default(PENDING)
+  payload       String?  // JSON string with additional info
+  providerPaymentChatId String? @map("provider_payment_chat_id")
+  confirmedAt   DateTime? @map("confirmed_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription  Subscription? @relation(fields: [subscriptionId], references: [id])
+  subscriptionId Int?    @map("subscription_id")
+
+  @@map("telegram_stars_payments")
 }
 
 model BQG {

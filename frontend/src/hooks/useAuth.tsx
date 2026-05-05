@@ -1,6 +1,17 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { useAuthStore } from '../store/authStore';
 
+interface User {
+  id: number;
+  telegramId: string;
+  username: string | null;
+  firstName: string;
+  lastName: string | null;
+  isOrganizer: boolean;
+  balance: number;
+  photoUrl: string | null;
+}
+
 interface Subscription {
   plan: 'free' | 'premium';
   isActive: boolean;
@@ -9,7 +20,7 @@ interface Subscription {
 }
 
 interface AuthContextType {
-  user: any;
+  user: User | null;
   token: string | null;
   loading: boolean;
   error: string | null;

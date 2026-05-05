@@ -30,6 +30,7 @@ const SECTION_LABELS: Record<string, string> = {
   welcome: 'welcome',
   'first-steps': 'first_steps',
   features: 'features',
+  'ai-features': 'ai_features',
   methodology: 'methodology',
   'goal-30': 'goal_30_days',
   premium: 'premium',
@@ -214,6 +215,66 @@ export function NavigatorScreen() {
       </AccordionSection>
 
       <AccordionSection
+        id="ai-features"
+        title="🤖 ИИ-функции RADAR"
+        isOpen={openSections.includes('ai-features')}
+        onToggle={() => toggleSection('ai-features')}
+      >
+        <div style={{ color: '#e5e7eb', fontSize: '14px', lineHeight: '1.6' }}>
+          <p style={{ marginBottom: '16px' }}>
+            RADAR использует локальный ИИ (Ollama Qwen) для анализа вашей сети контактов.
+          </p>
+
+          <div style={{ marginBottom: '16px' }}>
+            <h5 style={{ color: '#a855f7', marginBottom: '8px' }}>🔍 Классификация контактов</h5>
+            <p>ИИ определяет:</p>
+            <p style={{ fontSize: '12px', color: '#9ca3af' }}>
+              • Круг: Support (3-5), Productivity (до 75), Development (~100)<br/>
+              • Роль: Connector, Bridge, Gatekeeper, Condensator<br/>
+              • Оценку важности (score 0-100)
+            </p>
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <h5 style={{ color: '#a855f7', marginBottom: '8px' }}>💡 Рекомендации</h5>
+            <p>ИИ даёт персональные советы:</p>
+            <p style={{ fontSize: '12px', color: '#9ca3af' }}>
+              • Archive — кого пора архивировать<br/>
+              • Unfreeze — кого «разморозить»<br/>
+              • Strengthen — кого укрепить<br/>
+              • Meet — с кем назначить встречу
+            </p>
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <h5 style={{ color: '#a855f7', marginBottom: '8px' }}>📊 Анализ сети</h5>
+            <p>ИИ оценивает здоровье сети:</p>
+            <p style={{ fontSize: '12px', color: '#9ca3af' }}>
+              • Общее число контактов<br/>
+              • Распределение по кругам<br/>
+              • Недостающие роли<br/>
+              • Score здоровья (0-100)
+            </p>
+          </div>
+
+          <div style={{ 
+            backgroundColor: 'rgba(168, 85, 247, 0.1)', 
+            border: '1px solid rgba(168, 85, 247, 0.3)',
+            borderRadius: '8px',
+            padding: '12px',
+          }}>
+            <p style={{ fontWeight: '600', marginBottom: '8px' }}>📍 Где найти:</p>
+            <p style={{ fontSize: '13px' }}>
+              Главная → «Инсайты» → вкладки «Обзор», «Контакты», «Рекомендации»
+            </p>
+            <p style={{ fontSize: '13px', marginTop: '8px' }}>
+              Главная → «Граф сети» → визуализация связей
+            </p>
+          </div>
+        </div>
+      </AccordionSection>
+
+      <AccordionSection
         id="methodology"
         title="🧠 Философия RADAR"
         isOpen={openSections.includes('methodology')}
@@ -310,8 +371,22 @@ export function NavigatorScreen() {
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <h5 style={{ color: '#fbbf24', marginBottom: '8px' }}>Premium (599₽/мес)</h5>
-            <p>• ♾️ Безлимит контактов<br/>• 🤖 ИИ-классификация ролей<br/>• ⚖️ Баланс доверия<br/>• 📊 Метрики здоровья сети<br/>• 🔄 Авто-ротация<br/>• 📥 Экспорт отчётов</p>
+            <h5 style={{ color: '#fbbf24', marginBottom: '8px' }}>Premium (⭐ 99 Stars/мес)</h5>
+            <p>• ♾️ Безлимит контактов<br/>• 🤖 ИИ-классификация ролей<br/>• ⚖️ Баланс доверия<br/>• 📊 Метрики здоровья сети<br/>• 🔄 Рекомендации по ротации<br/>• 📥 Экспорт отчётов</p>
+          </div>
+
+          <div style={{ 
+            backgroundColor: 'rgba(0, 136, 204, 0.1)', 
+            border: '1px solid rgba(0, 136, 204, 0.3)',
+            borderRadius: '8px',
+            padding: '12px',
+            marginBottom: '16px'
+          }}>
+            <h5 style={{ color: '#0088cc', marginBottom: '8px' }}>Как оплатить:</h5>
+            <p style={{ marginBottom: '8px' }}><span style={{ fontSize: '16px' }}>⭐</span> <b>Telegram Stars</b> — прямо в боте:</p>
+            <p style={{ fontSize: '12px', color: '#9ca3af' }}>Профиль → Подписка → Выбрать план → Оплатить Stars</p>
+            <p style={{ marginTop: '12px', marginBottom: '8px' }}><span style={{ fontSize: '16px' }}>💎</span> <b>CryptoBot (USDT)</b> — альтернатива:</p>
+            <p style={{ fontSize: '12px', color: '#9ca3af' }}>Там же выбрать «Оплатить CryptoBot»</p>
           </div>
 
           <button

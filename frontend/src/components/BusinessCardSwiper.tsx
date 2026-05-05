@@ -9,6 +9,13 @@ interface BusinessCard {
   id: number;
   contactId: string;
   businessName?: string;
+  name?: string;
+  title?: string;
+  company?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  telegram?: string;
   resources?: string;
   personalData?: string;
   qrCodeUrl?: string;

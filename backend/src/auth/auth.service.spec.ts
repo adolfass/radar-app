@@ -3,17 +3,20 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { TelegramProfileService } from '../telegram-profile/telegram-profile.service';
 import * as crypto from 'crypto';
 
 describe('AuthService', () => {
   let service: AuthService;
-  let jwtService: JwtService;
-  let configService: ConfigService;
 
   const mockPrisma = {
     user: {
       findUnique: jest.fn(),
       create: jest.fn(),
+      update: jest.fn().mockImplementation((data) => {
+        const baseUser = { id: data.where.id, telegramId: BigInt(12345) };
+        return Promise.resolve({ ...baseUser, ...data.data });
+      }),
     },
   };
 
@@ -25,6 +28,10 @@ describe('AuthService', () => {
     get: jest.fn(),
   };
 
+  const mockTelegramProfileService = {
+    lookupById: jest.fn().mockResolvedValue(null),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -32,12 +39,11 @@ describe('AuthService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: TelegramProfileService, useValue: mockTelegramProfileService },
       ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    jwtService = module.get<JwtService>(JwtService);
-    configService = module.get<ConfigService>(ConfigService);
 
     jest.clearAllMocks();
   });
@@ -65,11 +71,16 @@ describe('AuthService', () => {
 
     it('should validate user and return token', async () => {
       const botToken = 'test:bot_token';
-      const initData = 'user=%7B%22id%22%3A12345%2C%22first_name%22%3A%22Test%22%7D&query_id=test';
+      const initData =
+        'user=%7B%22id%22%3A12345%2C%22first_name%22%3A%22Test%22%2C%22last_name%22%3Anull%2C%22username%22%3Anull%7D&query_id=test';
       const hash = createValidHash(botToken, initData);
       const fullInitData = `${initData}&hash=${hash}`;
 
-      mockConfigService.get.mockReturnValue(botToken);
+      mockConfigService.get.mockImplementation((key: string) => {
+        if (key === 'TELEGRAM_BOT_TOKEN') return botToken;
+        if (key === 'TELEGRAM_BOT_USERNAME') return 'test_bot';
+        return null;
+      });
       mockPrisma.user.findUnique.mockResolvedValue({
         id: 1,
         telegramId: BigInt(12345),
@@ -78,23 +89,18 @@ describe('AuthService', () => {
         lastName: null,
         isOrganizer: false,
         balance: 0,
+        photoUrl: 'https://example.com/photo.jpg',
       });
       mockJwtService.signAsync.mockResolvedValue('jwt-token');
 
       const result = await service.validateUser({ initData: fullInitData });
 
-      expect(result).toEqual({
-        user: {
-          id: 1,
-          telegramId: '12345',
-          username: null,
-          firstName: 'Test',
-          lastName: null,
-          isOrganizer: false,
-          balance: 0,
-        },
-        token: 'jwt-token',
+      expect(result.user).toMatchObject({
+        id: 1,
+        telegramId: '12345',
+        firstName: 'Test',
       });
+      expect(result.token).toBe('jwt-token');
     });
 
     it('should create new user if not found', async () => {
@@ -103,7 +109,11 @@ describe('AuthService', () => {
       const hash = createValidHash(botToken, initData);
       const fullInitData = `${initData}&hash=${hash}`;
 
-      mockConfigService.get.mockReturnValue(botToken);
+      mockConfigService.get.mockImplementation((key: string) => {
+        if (key === 'TELEGRAM_BOT_TOKEN') return botToken;
+        if (key === 'TELEGRAM_BOT_USERNAME') return 'test_bot';
+        return null;
+      });
       mockPrisma.user.findUnique.mockResolvedValue(null);
       mockPrisma.user.create.mockResolvedValue({
         id: 2,

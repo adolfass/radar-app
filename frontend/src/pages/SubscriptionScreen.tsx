@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
-import { CryptoPayButton } from '../components/Payment';
+import { CryptoPayButton, TelegramStarsButton } from '../components/Payment';
 import { BottomNav } from '../components/BottomNav';
 
 interface SubscriptionData {
@@ -101,7 +101,7 @@ export function SubscriptionScreen() {
               <div style={styles.planCard}>
                 <div style={styles.planHeader}>
                   <span style={styles.planName}>Месяц</span>
-                  <span style={styles.planPrice}>0.65 USDT</span>
+                  <span style={styles.planPrice}>99 ⭐</span>
                 </div>
                 <ul style={styles.planFeatures}>
                   <li>✓ Безлимитные контакты</li>
@@ -110,29 +110,35 @@ export function SubscriptionScreen() {
                   <li>✓ Ритуалы</li>
                   <li>✓ Экспорт</li>
                 </ul>
-                <CryptoPayButton
+                <TelegramStarsButton
                   plan="premium_monthly"
                   onSuccess={handleSuccess}
                   onError={(err) => alert(err)}
                 />
+                <div style={styles.altPayment}>
+                  или <CryptoPayButton plan="premium_monthly" onSuccess={handleSuccess} onError={(err) => alert(err)} compact />
+                </div>
               </div>
 
               <div style={styles.planCard}>
                 <div style={styles.planBadge}>Экономия 30%</div>
                 <div style={styles.planHeader}>
                   <span style={styles.planName}>Год</span>
-                  <span style={styles.planPrice}>5.4 USDT</span>
+                  <span style={styles.planPrice}>749 ⭐</span>
                 </div>
                 <ul style={styles.planFeatures}>
                   <li>✓ Все функции месяца</li>
                   <li>✓ Приоритетная поддержка</li>
                   <li>✓ Ранний доступ</li>
                 </ul>
-                <CryptoPayButton
+                <TelegramStarsButton
                   plan="premium_yearly"
                   onSuccess={handleSuccess}
                   onError={(err) => alert(err)}
                 />
+                <div style={styles.altPayment}>
+                  или <CryptoPayButton plan="premium_yearly" onSuccess={handleSuccess} onError={(err) => alert(err)} compact />
+                </div>
               </div>
             </div>
 
@@ -292,5 +298,14 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--radar-text-tertiary)',
     textAlign: 'center',
     marginTop: '16px',
+  },
+  altPayment: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    marginTop: '12px',
+    fontSize: '12px',
+    color: 'var(--radar-text-secondary)',
   },
 };

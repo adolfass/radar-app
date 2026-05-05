@@ -11,8 +11,8 @@ import {
 } from '@nestjs/common';
 import { TrustService } from './trust.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { LogTrustDto } from './dto/log-trust.dto';
-import { AdjustTrustDto } from './dto/adjust-trust.dto';
+import { AdjustTrustSchema, LogTrustSchema } from '../common/validations/zod.schemas';
+import { validateWithZod } from '../common/validations/zod.pipe';
 
 @Controller('trust')
 @UseGuards(JwtAuthGuard)
@@ -23,24 +23,26 @@ export class TrustController {
   async adjustTrust(
     @Request() req,
     @Param('contactId', ParseIntPipe) contactId: number,
-    @Body() dto: AdjustTrustDto,
+    @Body() body: unknown,
   ) {
+    const validated = validateWithZod(AdjustTrustSchema, body);
     return this.trustService.adjustTrust(
       req.user.userId,
       contactId,
-      dto.amount,
-      dto.reason,
+      validated.delta,
+      validated.reason,
     );
   }
 
   @Post('log')
-  async logInteraction(@Request() req, @Body() logTrustDto: LogTrustDto) {
+  async logInteraction(@Request() req, @Body() body: unknown) {
+    const validated = validateWithZod(LogTrustSchema, body);
     return this.trustService.logInteraction(
       req.user.userId,
-      logTrustDto.contactId,
-      logTrustDto.type,
-      logTrustDto.description,
-      logTrustDto.balanceDelta,
+      validated.contactId,
+      validated.type || 'trust',
+      validated.reason,
+      validated.delta,
     );
   }
 
@@ -55,7 +57,10 @@ export class TrustController {
   }
 
   @Get('history/:contactId')
-  async getContactTrustHistory(@Request() req, @Param('contactId', ParseIntPipe) contactId: number) {
+  async getContactTrustHistory(
+    @Request() req,
+    @Param('contactId', ParseIntPipe) contactId: number,
+  ) {
     return this.trustService.getTrustHistory(req.user.userId, contactId);
   }
 

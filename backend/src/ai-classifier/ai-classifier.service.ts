@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 
 export enum ContactCircle {
@@ -51,8 +52,60 @@ export interface NetworkSummary {
 @Injectable()
 export class AiClassifierService {
   private readonly logger = new Logger(AiClassifierService.name);
+  private readonly ollamaUrl: string;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService,
+  ) {
+    this.ollamaUrl = this.configService.get('OLLAMA_URL') || 'http://localhost:11434';
+  }
+
+  async queryLLM(prompt: string, systemPrompt?: string): Promise<string> {
+    try {
+      const response = await fetch(`${this.ollamaUrl}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'qwen2.5:0.5b',
+          prompt: systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt,
+          stream: false,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Ollama error: ${response.status}`);
+      }
+
+      const data = (await response.json()) as any;
+      this.logger.log(`LLM response: ${data.response.substring(0, 100)}...`);
+      return data.response;
+    } catch (error) {
+      this.logger.error(`LLM request failed: ${error}`);
+      throw error;
+    }
+  }
+
+  async analyzeContactWithAI(contactId: number, userId: number): Promise<string> {
+    const contact = await this.prisma.contact.findUnique({
+      where: { id: contactId },
+    });
+
+    if (!contact || contact.userId !== userId) {
+      throw new Error('Contact not found');
+    }
+
+    const prompt = `Проанализируй контакт "${contact.businessName || 'Без названия'}" и дай рекомендацию по работе с ним в сети контактов.
+
+Контекст:
+- Круг: ${contact.circle || 'не определён'}
+- Архетип: ${contact.archetype || 'не определён'}
+- Роль (AI): ${contact.aiSuggestedRole || 'не определена'}
+
+Дай краткую рекомендацию (2-3 предложения) на русском языке.`;
+
+    return this.queryLLM(prompt);
+  }
 
   async classifyContact(contactId: number, userId: number): Promise<ContactAnalysis> {
     const contact = await this.prisma.contact.findUnique({
