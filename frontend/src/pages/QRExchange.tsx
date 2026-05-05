@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/authStore';
 import { startNativeScanner, parseQrData } from '../utils/qr-scanner';
 import { QRCodeSVG as QRCode } from 'qrcode.react';
 
-const BOT_USERNAME = 'radar_strateg_space_bot';
+const BOT_USERNAME = 'radar_strateg_bot';
 
 export function QRExchange() {
   const navigate = useNavigate();
