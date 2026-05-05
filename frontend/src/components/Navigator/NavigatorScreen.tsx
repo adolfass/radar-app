@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AccordionSection } from './AccordionSection';
+import { ExamplesSection } from './ExamplesSection';
 import { analytics } from '../../lib/analytics';
 
 interface ChecklistState {
@@ -467,6 +468,8 @@ export function NavigatorScreen() {
           </div>
         </div>
       </AccordionSection>
+
+      <ExamplesSection />
     </div>
   );
 }

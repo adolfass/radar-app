@@ -51,6 +51,11 @@ export class ContactController {
     return this.contactService.remove(id, req.user.userId);
   }
 
+  @Get('export/:id')
+  async exportVCard(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.contactService.exportVCard(id, req.user.userId);
+  }
+
   @Post('validate')
   async validateContact(@Body() body: unknown) {
     const validated = validateWithZod(CreateContactSchema, body);

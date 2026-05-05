@@ -2,12 +2,14 @@ import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService,
+    private prisma: PrismaService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -27,7 +29,28 @@ export class JwtAuthGuard implements CanActivate {
         throw new UnauthorizedException('Token from different bot');
       }
 
-      request['user'] = payload;
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.userId },
+        select: {
+          id: true,
+          telegramId: true,
+          username: true,
+          firstName: true,
+          lastName: true,
+          photoUrl: true,
+          isOrganizer: true,
+          balance: true,
+        },
+      });
+
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      request['user'] = {
+        ...user,
+        telegramId: user.telegramId.toString(),
+      };
     } catch (error) {
       if (error instanceof UnauthorizedException) {
         throw error;

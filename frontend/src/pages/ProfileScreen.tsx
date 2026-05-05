@@ -9,6 +9,7 @@ export function ProfileScreen() {
   const { cards, deleteCard } = useBusinessCards();
   const { stats, getReferralLink } = useReferrals();
   const [selectedCard, setSelectedCard] = useState<any>(null);
+  const [photoError, setPhotoError] = useState(false);
 
   const isPremium = subscription?.plan === 'premium' && subscription?.isActive;
   const trialEnd = subscription?.trialEnd ? new Date(subscription.trialEnd) : null;
@@ -48,10 +49,27 @@ export function ProfileScreen() {
       minHeight: '100vh',
       backgroundColor: 'var(--tg-theme-bg-color, #f5f5f5)',
       padding: '16px',
+      paddingBottom: 'calc(16px + 64px + var(--radar-safe-bottom))',
     }}>
       <header style={{
         marginBottom: '24px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
       }}>
+        <button
+          onClick={() => navigate('/')}
+          style={{
+            background: 'none',
+            border: 'none',
+            fontSize: '16px',
+            cursor: 'pointer',
+            color: 'var(--tg-theme-button-color, #2481cc)',
+            padding: '8px',
+          }}
+        >
+          ← Назад
+        </button>
         <h1 style={{
           fontSize: '24px',
           fontWeight: 'bold',
@@ -71,7 +89,7 @@ export function ProfileScreen() {
         alignItems: 'center',
         gap: '16px',
       }}>
-        {user?.photoUrl ? (
+        {user?.photoUrl && !photoError ? (
           <img
             src={user.photoUrl}
             alt={user.firstName || 'Avatar'}
@@ -81,6 +99,7 @@ export function ProfileScreen() {
               borderRadius: '30px',
               objectFit: 'cover',
             }}
+            onError={() => setPhotoError(true)}
           />
         ) : (
           <div style={{

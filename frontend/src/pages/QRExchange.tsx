@@ -30,10 +30,8 @@ export function QRExchange() {
 
   const loadQR = async (contactId: string) => {
     try {
-      const res = await api.get(`/business-cards/qr/${contactId}`, {
-        responseType: 'blob',
-      });
-      setQrCodeUrl(URL.createObjectURL(res.data));
+      const res = await api.get(`/business-cards/qr/${contactId}`);
+      setQrCodeUrl(res.data.qrCodeDataUrl);
     } catch (err) {
       console.error('Failed to load QR:', err);
     }
@@ -271,9 +269,9 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '16px',
   },
   qrImage: {
-    width: '100%',
-    maxWidth: '280px',
-    height: 'auto',
+    width: '280px',
+    height: '280px',
+    objectFit: 'contain',
   },
   qrPlaceholder: {
     textAlign: 'center',

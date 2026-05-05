@@ -109,12 +109,12 @@ function AppContent() {
   return <AppRoutes />;
 }
 
-const mainNavPaths = ['/', '/qr-exchange', '/meetings', '/contacts', '/navigator'];
+const mainNavPaths = ['/', '/qr-exchange', '/meetings', '/contacts', '/navigator', '/profile'];
 
 function AppRoutes() {
   const { user } = useAuth();
   const location = useLocation();
-  const showBottomNav = mainNavPaths.includes(location.pathname) && location.pathname !== '/profile';
+  const showBottomNav = mainNavPaths.includes(location.pathname) ;
 
   return (
     <>

@@ -9,11 +9,13 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN || 'http://public@localhost:8001/1',
-    environment: process.env.NODE_ENV || 'development',
-    tracesSampleRate: 1.0,
-  });
+  if (process.env.SENTRY_DSN) {
+    Sentry.init({
+      dsn: process.env.SENTRY_DSN,
+      environment: process.env.NODE_ENV || 'development',
+      tracesSampleRate: 1.0,
+    });
+  }
 
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
