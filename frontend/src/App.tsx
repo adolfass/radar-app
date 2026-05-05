@@ -44,7 +44,7 @@ function AppContent() {
   const [authAttempted, setAuthAttempted] = useState(false);
 
   useEffect(() => {
-    const tg = (window as unknown as { Telegram?: { WebApp?: { initData?: string } } }).Telegram?.WebApp;
+    const tg = (window as unknown as { Telegram?: { WebApp?: { initData?: string; initDataUnsafe?: { start_param?: string } } } }).Telegram?.WebApp;
     const isTgApp = !!(tg && tg.initData && tg.initData !== '');
     setIsTelegram(isTgApp);
 
@@ -52,11 +52,19 @@ function AppContent() {
       setTelegramInitData(tg.initData);
       tg.ready();
       tg.expand();
-
-      const startParam = tg.initDataUnsafe?.start_param || new URLSearchParams(window.location.search).get('startapp');
-      if (startParam) {
-        sessionStorage.setItem('startapp_param', startParam);
+      
+      // Telegram passes start_param in initDataUnsafe from URL
+      const tgStartParam = tg.initDataUnsafe?.start_param;
+      if (tgStartParam) {
+        sessionStorage.setItem('startapp_param', tgStartParam);
       }
+    }
+
+    // Fallback: read from URL if Telegram didn't provide it
+    const urlParams = new URLSearchParams(window.location.search);
+    const startFromUrl = urlParams.get('start') || urlParams.get('startapp');
+    if (startFromUrl && !sessionStorage.getItem('startapp_param')) {
+      sessionStorage.setItem('startapp_param', startFromUrl);
     }
   }, []);
 

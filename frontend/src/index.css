@@ -77,3 +77,15 @@ a {
 .page-with-nav {
   padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
 }
+
+/* Fix for touch scrolling in Telegram WebView on Android */
+html, body {
+  height: 100%;
+  overflow: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
