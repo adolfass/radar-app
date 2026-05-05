@@ -90,7 +90,7 @@ export function NavigatorScreen() {
     <div style={{
       minHeight: '100vh',
       backgroundColor: '#000',
-      paddingBottom: '80px',
+      paddingBottom: '200px',
     }}>
       <header style={{
         padding: '16px',
