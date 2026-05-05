@@ -40,11 +40,8 @@ export function EventsScreen() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: 'var(--tg-theme-bg-color, #f5f5f5)',
-      padding: '16px',
-    }}>
+    <div style={{ height: '100vh', backgroundColor: 'var(--tg-theme-bg-color, #f5f5f5)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
       <header style={{
         marginBottom: '24px',
       }}>
@@ -180,6 +177,7 @@ export function EventsScreen() {
           })}
         </div>
       )}
+    </div>
     </div>
   );
 }

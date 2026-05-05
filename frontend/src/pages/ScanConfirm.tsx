@@ -79,6 +79,7 @@ export function ScanConfirm() {
 
   return (
     <div style={styles.container}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
       {/* Header */}
       <header style={styles.header}>
         <button onClick={handleCancel} style={styles.backBtn}>← Назад</button>
@@ -135,16 +136,12 @@ export function ScanConfirm() {
         </button>
       </div>
     </div>
+    </div>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  container: {
-    minHeight: '100vh',
-    backgroundColor: 'var(--radar-bg)',
-    padding: '16px',
-    paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
-  },
+  container: {height: '100vh', display: 'flex', flexDirection: 'column'},
   loading: {
     textAlign: 'center',
     color: 'var(--radar-text-secondary)',

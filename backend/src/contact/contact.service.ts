@@ -127,6 +127,48 @@ export class ContactService {
     return contact;
   }
 
+
+  async count(userId: number): Promise<number> {
+    return this.prisma.contact.count({ where: { userId } });
+  }
+
+  async createMany(contacts: {
+    userId: number;
+    contactId: string;
+    businessName: string;
+    resources: string;
+    personalData: string;
+    circle: string;
+    archetype: string;
+    aiSuggestedRole: string;
+    privateMeta: string;
+    lastInteraction: Date;
+    isActive: boolean;
+  }[]): Promise<number> {
+    const result = await this.prisma.contact.createMany({
+      data: contacts,
+      skipDuplicates: true,
+    });
+    return result.count;
+  }
+
+  async deleteTestContacts(userId: number): Promise<number> {
+    const allContacts = await this.prisma.contact.findMany({
+      where: { userId },
+    });
+
+    let deletedCount = 0;
+    for (const contact of allContacts) {
+      const meta = this.decryptPrivateMeta(contact);
+      if (meta.privateMeta && typeof meta.privateMeta === 'object' && (meta.privateMeta as any).isTest === true) {
+        await this.prisma.contact.delete({ where: { id: contact.id } });
+        deletedCount++;
+      }
+    }
+
+    return deletedCount;
+  }
+
   async getPublicProfile(userId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },

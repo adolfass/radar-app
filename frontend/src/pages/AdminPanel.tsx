@@ -141,6 +141,7 @@ export function AdminPanel() {
 
   return (
     <div style={styles.container}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
       <div style={styles.header}>
         <button onClick={() => navigate(-1)} style={styles.backBtn}>←</button>
         <h1 style={styles.title}>Админ-панель</h1>
@@ -189,6 +190,7 @@ export function AdminPanel() {
       </div>
 
       <BottomNav />
+    </div>
     </div>
   );
 }
@@ -367,11 +369,7 @@ function EventsTab({
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  container: {
-    minHeight: '100vh',
-    backgroundColor: 'var(--radar-bg)',
-    paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))',
-  },
+  container: {height: '100vh', display: 'flex', flexDirection: 'column'},
   header: {
     display: 'flex',
     alignItems: 'center',

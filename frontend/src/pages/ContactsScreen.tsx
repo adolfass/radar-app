@@ -169,12 +169,8 @@ export function ContactsScreen() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: 'var(--radar-bg)',
-      padding: '16px',
-      paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
-    }}>
+    <div style={{ height: '100vh', backgroundColor: 'var(--radar-bg)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
       <header style={{ marginBottom: '16px' }}>
         <div style={{
           display: 'flex',
@@ -525,6 +521,7 @@ export function ContactsScreen() {
           onCancel={() => setShowFindFriends(false)}
         />
       )}
+    </div>
     </div>
   );
 }

@@ -62,6 +62,7 @@ export function ReviewRitual() {
 
   return (
     <div style={styles.container}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: 'calc(16px + var(--radar-safe-bottom))' }}>
       <header style={styles.header}>
         <button onClick={() => navigate('/')} style={styles.backBtn}>← Назад</button>
         <h1 style={styles.title}>Ритуал инвентаризации</h1>
@@ -197,14 +198,12 @@ export function ReviewRitual() {
         </div>
       )}
     </div>
+    </div>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  container: {
-    minHeight: '100vh', backgroundColor: 'var(--radar-bg)',
-    padding: '16px', paddingBottom: 'calc(16px + var(--radar-safe-bottom))',
-  },
+  container: {height: '100vh', display: 'flex', flexDirection: 'column'},
   loadingText: { textAlign: 'center', color: 'var(--radar-text-secondary)', paddingTop: '100px' },
   header: { marginBottom: '24px' },
   backBtn: {

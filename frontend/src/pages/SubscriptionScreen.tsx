@@ -51,6 +51,7 @@ export function SubscriptionScreen() {
 
   return (
     <div style={styles.container}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
       <div style={styles.header}>
         <button onClick={() => navigate(-1)} style={styles.backBtn}>←</button>
         <h1 style={styles.title}>Подписка</h1>
@@ -151,15 +152,12 @@ export function SubscriptionScreen() {
 
       <BottomNav />
     </div>
+    </div>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  container: {
-    minHeight: '100vh',
-    backgroundColor: 'var(--radar-bg)',
-    paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))',
-  },
+  container: {height: '100vh', display: 'flex', flexDirection: 'column'},
   header: {
     display: 'flex',
     alignItems: 'center',

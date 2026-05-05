@@ -9,11 +9,8 @@ export function MainScreen() {
   const { cards } = useBusinessCards();
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: 'var(--tg-theme-bg-color, #f5f5f5)',
-      padding: '16px',
-    }}>
+    <div style={{ height: '100vh', backgroundColor: 'var(--tg-theme-bg-color, #f5f5f5)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
       {/* Header */}
       <header style={{
         display: 'flex',
@@ -197,6 +194,7 @@ export function MainScreen() {
           </div>
         </section>
       )}
+    </div>
     </div>
   );
 }

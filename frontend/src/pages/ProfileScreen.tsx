@@ -45,12 +45,8 @@ export function ProfileScreen() {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: 'var(--tg-theme-bg-color, #f5f5f5)',
-      padding: '16px',
-      paddingBottom: 'calc(16px + 64px + var(--radar-safe-bottom))',
-    }}>
+    <div style={{ height: '100vh', backgroundColor: 'var(--tg-theme-bg-color, #f5f5f5)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: 'calc(16px + 64px + var(--radar-safe-bottom))' }}>
       <header style={{
         marginBottom: '24px',
         display: 'flex',
@@ -607,6 +603,7 @@ export function ProfileScreen() {
           ⚙️ Админ-панель
         </button>
       )}
+    </div>
     </div>
   );
 }
