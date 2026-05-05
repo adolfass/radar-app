@@ -141,11 +141,6 @@ export class ReferralService {
       throw new BadRequestException(`Недостаточно звёзд. Нужно ${requiredStars}, в наличии ${balance}`);
     }
 
-    if (user.subscription?.isActive && user.subscription?.expiresAt && 
-        new Date(user.subscription.expiresAt) > new Date()) {
-      throw new BadRequestException('У вас уже есть активная подписка');
-    }
-
     const months = type === 'MONTH' ? 1 : 12;
     await this.subscriptionService.upgradeToPremium(userId, months);
 
