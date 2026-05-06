@@ -36,7 +36,7 @@ function TelegramRequired() {
   );
 }
 
-const SPECIAL_COMMANDS = ['qr', 'contacts', 'meetings', 'profile', 'settings'];
+const SPECIAL_COMMANDS = ['qr', 'contacts', 'meetings', 'profile', 'settings', 'navigator'];
 
 function AppContent() {
   const { user, loading, initAuth, error, clearError, validateToken, token } = useAuth();
@@ -84,6 +84,7 @@ function AppContent() {
             meetings: '/meetings',
             profile: '/profile',
             settings: '/profile',
+            navigator: '/navigator',
           };
           navigate(routeMap[startParam] || '/');
         } else {
