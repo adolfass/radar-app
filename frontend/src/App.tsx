@@ -36,6 +36,8 @@ function TelegramRequired() {
   );
 }
 
+const SPECIAL_COMMANDS = ['qr', 'contacts', 'meetings', 'profile', 'settings'];
+
 function AppContent() {
   const { user, loading, initAuth, error, clearError, validateToken, token } = useAuth();
   const navigate = useNavigate();
@@ -53,14 +55,12 @@ function AppContent() {
       tg.ready();
       tg.expand();
       
-      // Telegram passes start_param in initDataUnsafe from URL
       const tgStartParam = tg.initDataUnsafe?.start_param;
       if (tgStartParam) {
         sessionStorage.setItem('startapp_param', tgStartParam);
       }
     }
 
-    // Fallback: read from URL if Telegram didn't provide it
     const urlParams = new URLSearchParams(window.location.search);
     const startFromUrl = urlParams.get('start') || urlParams.get('startapp');
     if (startFromUrl && !sessionStorage.getItem('startapp_param')) {
@@ -73,10 +73,19 @@ function AppContent() {
       const startParam = sessionStorage.getItem('startapp_param');
       if (startParam) {
         sessionStorage.removeItem('startapp_param');
-        // Handle QR exchange format: contact_12345
+        
         if (startParam.startsWith('contact_')) {
           const userId = startParam.replace('contact_', '');
           navigate(`/scan-confirm/${userId}`);
+        } else if (SPECIAL_COMMANDS.includes(startParam)) {
+          const routeMap: Record<string, string> = {
+            qr: '/qr-exchange',
+            contacts: '/contacts',
+            meetings: '/meetings',
+            profile: '/profile',
+            settings: '/profile',
+          };
+          navigate(routeMap[startParam] || '/');
         } else {
           navigate(`/card/${startParam}`);
         }
@@ -135,7 +144,6 @@ function AppRoutes() {
   return (
     <>
       <Routes>
-        {/* RADAR Core */}
         <Route path="/" element={<DashboardRadar />} />
         <Route path="/qr-exchange" element={<QRExchange />} />
         <Route path="/contacts/:id" element={<ContactDossier />} />
@@ -145,8 +153,6 @@ function AppRoutes() {
         <Route path="/meetings" element={<MeetingFlow />} />
         <Route path="/insights" element={<Suspense fallback={<LoadingScreen />}><NetworkInsights /></Suspense>} />
         <Route path="/graph" element={<Suspense fallback={<LoadingScreen />}><NetworkGraph /></Suspense>} />
-
-        {/* Legacy */}
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/navigator" element={<NavigatorScreen />} />
         <Route path="/card/new" element={<BusinessCardForm />} />
