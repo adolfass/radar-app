@@ -17,7 +17,6 @@
   --radar-circle-productivity: #0a84ff;
   --radar-circle-development: #bf5af2;
 
-  /* Cultural Archetypes */
   --archetype-pomegranate: #C41E3A;
   --archetype-pomegranate-glow: rgba(196, 30, 58, 0.6);
   --archetype-peach: #0066FF;
@@ -38,23 +37,32 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
   background-color: var(--radar-bg);
   color: var(--radar-text);
   -webkit-font-smoothing: antialiased;
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
-  overflow-x: hidden;
-}
-
-html {
-  height: -webkit-fill-available;
+  -webkit-overflow-scrolling: touch;
 }
 
 #root {
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
 }
 
 button {
@@ -78,14 +86,28 @@ a {
   padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
 }
 
-/* Fix for touch scrolling in Telegram WebView on Android */
-html, body {
-  height: 100%;
-  overflow: hidden;
-  -webkit-overflow-scrolling: touch;
-}
-
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Ensure scrollable containers work properly */
+.scrollable {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  height: 100%;
+}
+
+/* Touch scroll fix for Telegram WebView */
+@media screen and (max-width: 1024px) {
+  html, body {
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+  
+  #root {
+    overflow-y: scroll;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+  }
+}
