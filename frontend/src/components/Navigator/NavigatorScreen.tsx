@@ -93,9 +93,8 @@ export function NavigatorScreen() {
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100%', height: 'auto', paddingBottom: '200px',
       backgroundColor: '#000',
-      paddingBottom: '200px',
     }}>
       <header style={{
         padding: '16px',
