@@ -111,3 +111,34 @@ a {
     overscroll-behavior: none;
   }
 }
+
+/* Telegram WebView specific fixes */
+.telegram-web-app #root {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+  overflow-scrolling: touch;
+}
+
+/* Force scroll on root in Telegram */
+@media screen and (max-width: 768px) {
+  #root {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: scroll !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  .page-content {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+}
