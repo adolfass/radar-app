@@ -2,15 +2,22 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useAuthStore } from '../store/authStore';
+import { useViewStore, ViewMode, VIEW_LABELS, VIEW_ICONS } from '../store/viewStore';
+import { RadarView } from '../components/views/RadarView';
+import { MatrixView } from '../components/views/MatrixView';
+import { TimelineView } from '../components/views/TimelineView';
+import { SunburstView } from '../components/views/SunburstView';
 import { CULTURAL_ARCHETYPES } from '../theme/culturalColors';
 
 export function DashboardRadar() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { viewMode, setViewMode } = useViewStore();
   const [contacts, setContacts] = useState<any[]>([]);
   const [bqg, setBqg] = useState<any>(null);
   const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showNetworkViz, setShowNetworkViz] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -54,6 +61,34 @@ export function DashboardRadar() {
       </div>
     );
   }
+
+  const viewModes: ViewMode[] = ['radar', 'matrix', 'timeline', 'sunburst'];
+
+  const renderView = () => {
+    switch (viewMode) {
+      case 'radar':
+        return <RadarView contacts={contacts} />;
+      case 'matrix':
+        return <MatrixView contacts={contacts} />;
+      case 'timeline':
+        return <TimelineView contacts={contacts} />;
+      case 'sunburst':
+        return <SunburstView contacts={contacts} />;
+      case 'graph':
+        return (
+          <div style={styles.graphPlaceholder}>
+            <button 
+              onClick={() => navigate('/graph')}
+              style={styles.graphLink}
+            >
+              🕸️ Открыть интерактивный граф сети
+            </button>
+          </div>
+        );
+      default:
+        return <RadarView contacts={contacts} />;
+    }
+  };
 
   return (
     <div style={styles.container}>
@@ -106,6 +141,53 @@ export function DashboardRadar() {
           <span style={styles.actionIcon}>🎯</span>
           <span style={styles.actionText}>BQG</span>
         </button>
+      </div>
+
+      {/* Network Visualization Section */}
+      <div style={styles.section}>
+        <div style={styles.sectionHeader}>
+          <h2 style={styles.sectionTitle}>Анализ сети</h2>
+          <button
+            onClick={() => setShowNetworkViz(!showNetworkViz)}
+            style={styles.sectionToggle}
+          >
+            {showNetworkViz ? 'Скрыть' : 'Показать'}
+          </button>
+        </div>
+
+        {showNetworkViz && (
+          <>
+            {/* View Switcher */}
+            <div style={styles.viewSwitcher}>
+              {viewModes.map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  style={{
+                    ...styles.viewBtn,
+                    ...(viewMode === mode ? styles.viewBtnActive : {}),
+                  }}
+                >
+                  <span style={styles.viewIcon}>{VIEW_ICONS[mode]}</span>
+                  <span style={styles.viewLabel}>{VIEW_LABELS[mode]}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* View Content */}
+            <div style={styles.viewContent}>
+              {renderView()}
+            </div>
+          </>
+        )}
+
+        {!showNetworkViz && (
+          <div style={styles.vizPreview} onClick={() => setShowNetworkViz(true)}>
+            <span style={styles.vizIcon}>🎯</span>
+            <span>Нажмите для анализа сети</span>
+            <span style={styles.vizArrow}>→</span>
+          </div>
+        )}
       </div>
 
       {/* Network Overview */}
@@ -416,6 +498,15 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: '700',
     marginBottom: '12px',
   },
+  sectionToggle: {
+    background: 'none',
+    border: 'none',
+    color: 'var(--radar-accent)',
+    fontSize: '14px',
+    fontWeight: '600',
+    padding: '8px',
+    cursor: 'pointer',
+  },
   sectionLink: {
     background: 'none',
     border: 'none',
@@ -423,6 +514,75 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '14px',
     fontWeight: '600',
     padding: '8px',
+  },
+  viewSwitcher: {
+    display: 'flex',
+    gap: '8px',
+    marginBottom: '16px',
+    overflowX: 'auto',
+    paddingBottom: '4px',
+  },
+  viewBtn: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '4px',
+    padding: '12px 16px',
+    backgroundColor: 'var(--radar-surface)',
+    border: '1px solid var(--radar-border)',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    minWidth: '70px',
+  },
+  viewBtnActive: {
+    backgroundColor: 'var(--radar-accent)',
+    borderColor: 'var(--radar-accent)',
+  },
+  viewIcon: {
+    fontSize: '20px',
+  },
+  viewLabel: {
+    fontSize: '10px',
+    fontWeight: '600',
+    color: 'var(--radar-text-secondary)',
+  },
+  viewContent: {
+    backgroundColor: 'var(--radar-surface)',
+    borderRadius: '16px',
+    overflow: 'hidden',
+  },
+  graphPlaceholder: {
+    padding: '24px',
+    textAlign: 'center',
+  },
+  graphLink: {
+    padding: '16px 24px',
+    backgroundColor: 'var(--radar-accent)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '12px',
+    fontSize: '14px',
+    fontWeight: '600',
+    cursor: 'pointer',
+  },
+  vizPreview: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '12px',
+    padding: '20px',
+    backgroundColor: 'var(--radar-surface)',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    color: 'var(--radar-text-secondary)',
+    fontSize: '14px',
+  },
+  vizIcon: {
+    fontSize: '24px',
+  },
+  vizArrow: {
+    fontSize: '18px',
+    color: 'var(--radar-accent)',
   },
   statsGrid: {
     display: 'grid',
