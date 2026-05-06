@@ -46,11 +46,14 @@ function AppContent() {
   const [authAttempted, setAuthAttempted] = useState(false);
 
   useEffect(() => {
+    console.log('[RADAR App] Stage 5: AppContent mounted');
     const tg = (window as unknown as { Telegram?: { WebApp?: { initData?: string; initDataUnsafe?: { start_param?: string } } } }).Telegram?.WebApp;
     const isTgApp = !!(tg && tg.initData && tg.initData !== '');
+    console.log('[RADAR App] isTgApp:', isTgApp, 'tg:', tg);
     setIsTelegram(isTgApp);
 
     if (isTgApp && tg.initData) {
+      console.log('[RADAR App] Stage 6: Telegram detected, setting initData');
       setTelegramInitData(tg.initData);
       tg.ready();
       tg.expand();
