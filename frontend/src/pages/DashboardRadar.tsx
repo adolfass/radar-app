@@ -331,7 +331,7 @@ export function DashboardRadar() {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  container: {height: '100vh', display: 'flex', flexDirection: 'column'},
+  container: {height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden'},
   loadingText: {
     textAlign: 'center',
     color: 'var(--radar-text-secondary)',
