@@ -200,10 +200,13 @@ export function MatrixView({ contacts, onContactSelect }: MatrixViewProps) {
 const styles: Record<string, React.CSSProperties> = {
   container: {
     padding: '16px',
+    backgroundColor: '#1a1a1a',
+    borderRadius: '12px',
+    minHeight: '200px',
   },
   matrixGrid: {
     position: 'relative',
-    backgroundColor: 'var(--radar-surface)',
+    backgroundColor: '#222222',
     borderRadius: '16px',
     padding: '24px 16px 16px',
   },
@@ -214,7 +217,7 @@ const styles: Record<string, React.CSSProperties> = {
     transform: 'rotate(-90deg) translateX(-50%)',
     transformOrigin: 'center',
     fontSize: '11px',
-    color: 'var(--radar-text-tertiary)',
+    color: '#888888',
     whiteSpace: 'nowrap',
   },
   axisLabelX: {
@@ -223,7 +226,7 @@ const styles: Record<string, React.CSSProperties> = {
     left: '50%',
     transform: 'translateX(-50%)',
     fontSize: '11px',
-    color: 'var(--radar-text-tertiary)',
+    color: '#888888',
   },
   quadrantContainer: {
     display: 'flex',
@@ -236,7 +239,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   quadrant: {
     flex: 1,
-    backgroundColor: 'var(--radar-surface-elevated)',
+    backgroundColor: '#2a2a2a',
     borderRadius: '12px',
     border: '2px solid',
     padding: '12px',
@@ -258,7 +261,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   quadrantDesc: {
     fontSize: '10px',
-    color: 'var(--radar-text-tertiary)',
+    color: '#888888',
     marginLeft: 'auto',
   },
   quadrantContacts: {
@@ -270,33 +273,33 @@ const styles: Record<string, React.CSSProperties> = {
     width: '28px',
     height: '28px',
     borderRadius: '14px',
-    backgroundColor: 'var(--radar-bg)',
+    backgroundColor: '#333333',
     border: '1px solid',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontSize: '10px',
     fontWeight: 600,
-    color: 'var(--radar-text-primary)',
+    color: '#ffffff',
     cursor: 'pointer',
   },
   moreChip: {
     width: '28px',
     height: '28px',
     borderRadius: '14px',
-    backgroundColor: 'var(--radar-surface)',
+    backgroundColor: '#444444',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontSize: '10px',
-    color: 'var(--radar-text-secondary)',
+    color: '#aaaaaa',
   },
   stats: {
     display: 'flex',
     justifyContent: 'space-around',
     marginTop: '16px',
     padding: '12px',
-    backgroundColor: 'var(--radar-surface)',
+    backgroundColor: '#222222',
     borderRadius: '12px',
   },
   statItem: {
@@ -304,6 +307,6 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: '4px',
     fontSize: '12px',
-    color: 'var(--radar-text-secondary)',
+    color: '#aaaaaa',
   },
 };
