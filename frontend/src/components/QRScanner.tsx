@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { BrowserMultiFormatReader, NotFoundException } from '@zxing/library';
+import { useState, useCallback } from 'react';
 
 interface QRScannerProps {
   onScan: (result: string) => void;
@@ -8,116 +7,46 @@ interface QRScannerProps {
 }
 
 export function QRScanner({ onScan, onError, onClose }: QRScannerProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isScanning, setIsScanning] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
-  const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
-  const mountedRef = useRef(true);
 
-  const stopScanning = useCallback(() => {
-    try {
-      if (codeReaderRef.current) {
-        codeReaderRef.current.reset();
-        codeReaderRef.current = null;
-      }
-    } catch (e) {
-      console.warn('Error stopping scanner:', e);
-    }
-    setIsScanning(false);
-    setIsLoading(false);
-  }, []);
-
-  const startScanning = useCallback(async () => {
-    if (!mountedRef.current) return;
+  const startNativeScanner = useCallback(() => {
+    const tg = (window as any).Telegram?.WebApp;
     
+    if (!tg?.scanQrPopup) {
+      const errorMsg = 'QR сканер доступен только в мобильном Telegram';
+      setError(errorMsg);
+      if (onError) onError(errorMsg);
+      return;
+    }
+
     try {
-      setError('');
-      setIsLoading(true);
-      setIsScanning(false);
-      
-      const codeReader = new BrowserMultiFormatReader();
-      codeReaderRef.current = codeReader;
-      
-      const devices = await codeReader.listVideoInputDevices();
-      
-      if (!mountedRef.current) return;
-      
-      if (devices.length === 0) {
-        setError('Камера не найдена. Разрешите доступ к камере в настройках.');
-        setIsLoading(false);
-        return;
-      }
-      
-      const backCamera = devices.find(d => 
-        d.label.toLowerCase().includes('back') || 
-        d.label.toLowerCase().includes('rear') ||
-        d.label.toLowerCase().includes('0')
-      );
-      const deviceId = backCamera?.deviceId || devices[0].deviceId;
-      
-      setIsLoading(false);
-      setIsScanning(true);
-      
-      await codeReader.decodeFromVideoDevice(deviceId, videoRef.current!, (result, err) => {
-        if (!mountedRef.current) return;
-        
-        if (result) {
-          try {
-            onScan(result.getText());
-          } catch (e) {
-            console.error('Scan callback error:', e);
-          }
-        }
-        if (err && !(err instanceof NotFoundException)) {
-          console.warn('QR scan error:', err.message);
+      tg.scanQrPopup({
+        text: 'Наведите камеру на QR-код визитки RADAR',
+      }, (result: string | false) => {
+        if (result && result.data) {
+          onScan(result.data);
+        } else if (result === false) {
+          onClose();
         }
       });
     } catch (err: any) {
-      if (!mountedRef.current) return;
-      
-      console.error('Scanner error:', err);
-      
-      let errorMessage = 'Ошибка запуска камеры';
-      if (err.name === 'NotAllowedError') {
-        errorMessage = 'Доступ к камере запрещён. Разрешите в настройках браузера.';
-      } else if (err.name === 'NotFoundError') {
-        errorMessage = 'Камера не найдена на устройстве.';
-      } else if (err.name === 'NotReadableError') {
-        errorMessage = 'Камера занята другим приложением.';
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-      
-      setError(errorMessage);
-      if (onError) onError(errorMessage);
-      setIsScanning(false);
-      setIsLoading(false);
+      const errorMsg = err?.message || 'Ошибка сканирования';
+      setError(errorMsg);
+      if (onError) onError(errorMsg);
     }
-  }, [onScan, onError]);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    
-    const timer = setTimeout(() => {
-      if (isLoading && mountedRef.current) {
-        setError('Камера не отвечает. Попробуйте ещё раз.');
-        setIsLoading(false);
-      }
-    }, 10000);
-    
-    startScanning();
-    
-    return () => {
-      mountedRef.current = false;
-      clearTimeout(timer);
-      stopScanning();
-    };
-  }, []);
+  }, [onScan, onError, onClose]);
 
   const handleClose = () => {
-    stopScanning();
+    const tg = (window as any).Telegram?.WebApp;
+    try {
+      tg?.closeScanQrPopup?.();
+    } catch {}
     onClose();
+  };
+
+  const handleRetry = () => {
+    setError('');
+    startNativeScanner();
   };
 
   return (
@@ -128,53 +57,38 @@ export function QRScanner({ onScan, onError, onClose }: QRScannerProps) {
           <button onClick={handleClose} style={styles.closeBtn}>✕</button>
         </div>
         
-        <div style={styles.videoContainer}>
-          <video 
-            ref={videoRef} 
-            style={styles.video} 
-            playsInline 
-            muted
-            autoPlay
-          />
-          
-          {isLoading && (
-            <div style={styles.loadingOverlay}>
-              <div style={styles.spinner} />
-              <p style={styles.loadingText}>Инициализация камеры...</p>
-            </div>
-          )}
-          
-          {error && (
-            <div style={styles.errorOverlay}>
+        <div style={styles.content}>
+          {error ? (
+            <div style={styles.errorState}>
+              <div style={styles.errorIcon}>📷</div>
               <p style={styles.errorText}>{error}</p>
-              <button 
-                onClick={startScanning} 
-                style={styles.retryBtn}
-              >
-                Повторить
+              <button onClick={handleRetry} style={styles.retryBtn}>
+                Попробовать снова
               </button>
+              <p style={styles.hint}>
+                QR сканер работает только в мобильном приложении Telegram
+              </p>
             </div>
-          )}
-          
-          {isScanning && !error && (
-            <div style={styles.scanFrame}>
-              <div style={styles.cornerTL} />
-              <div style={styles.cornerTR} />
-              <div style={styles.cornerBL} />
-              <div style={styles.cornerBR} />
+          ) : (
+            <div style={styles.loadingState}>
+              <div style={styles.spinner} />
+              <p style={styles.loadingText}>Открываю сканер...</p>
+              <button onClick={startNativeScanner} style={styles.openBtn}>
+                Открыть сканер
+              </button>
             </div>
           )}
         </div>
         
-        <p style={styles.hint}>
-          {isScanning ? 'Наведите камеру на QR-код' : 'Нажмите "Повторить" для сканирования'}
+        <p style={styles.footerHint}>
+          Наведите камеру на QR-код визитки
         </p>
       </div>
     </div>
   );
 }
 
-const styles = {
+const styles: Record<string, React.CSSProperties> = {
   overlay: {
     position: 'fixed' as const,
     top: 0,
@@ -221,61 +135,53 @@ const styles = {
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
-  videoContainer: {
-    position: 'relative' as const,
-    width: '100%',
-    aspectRatio: '1',
-    backgroundColor: '#000',
-  },
-  video: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover' as const,
-  },
-  loadingOverlay: {
-    position: 'absolute' as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+  content: {
+    padding: '32px 16px',
+    minHeight: '200px',
     display: 'flex' as const,
-    flexDirection: 'column' as const,
     alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    color: '#fff',
+    justifyContent: 'center',
+  },
+  loadingState: {
+    textAlign: 'center' as const,
+    width: '100%',
   },
   spinner: {
     width: '40px',
     height: '40px',
-    border: '3px solid rgba(255,255,255,0.3)',
-    borderTopColor: '#fff',
+    border: '3px solid rgba(255,255,255,0.2)',
+    borderTopColor: 'var(--radar-accent, #2563EB)',
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
+    margin: '0 auto 16px',
   },
   loadingText: {
-    marginTop: '16px',
+    color: 'var(--radar-text-secondary, #9CA3AF)',
+    marginBottom: '16px',
     fontSize: '14px',
   },
-  errorOverlay: {
-    position: 'absolute' as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    display: 'flex' as const,
-    flexDirection: 'column' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.9)',
+  openBtn: {
+    padding: '12px 24px',
+    backgroundColor: 'var(--radar-accent, #2563EB)',
     color: '#fff',
-    padding: '24px',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '14px',
+    fontWeight: 600,
+    cursor: 'pointer',
+  },
+  errorState: {
+    textAlign: 'center' as const,
+    width: '100%',
+  },
+  errorIcon: {
+    fontSize: '48px',
+    marginBottom: '16px',
   },
   errorText: {
-    textAlign: 'center' as const,
-    fontSize: '14px',
+    color: 'var(--radar-error, #EF4444)',
     marginBottom: '16px',
-    lineHeight: 1.5,
+    fontSize: '14px',
   },
   retryBtn: {
     padding: '12px 24px',
@@ -286,53 +192,14 @@ const styles = {
     fontSize: '14px',
     fontWeight: 600,
     cursor: 'pointer',
-  },
-  scanFrame: {
-    position: 'absolute' as const,
-    top: '20%',
-    left: '20%',
-    right: '20%',
-    bottom: '20%',
-    border: '2px solid rgba(37, 99, 235, 0.8)',
-    borderRadius: '8px',
-  },
-  cornerTL: {
-    position: 'absolute' as const,
-    top: -2,
-    left: -2,
-    width: '20px',
-    height: '20px',
-    borderTop: '4px solid #2563EB',
-    borderLeft: '4px solid #2563EB',
-  },
-  cornerTR: {
-    position: 'absolute' as const,
-    top: -2,
-    right: -2,
-    width: '20px',
-    height: '20px',
-    borderTop: '4px solid #2563EB',
-    borderRight: '4px solid #2563EB',
-  },
-  cornerBL: {
-    position: 'absolute' as const,
-    bottom: -2,
-    left: -2,
-    width: '20px',
-    height: '20px',
-    borderBottom: '4px solid #2563EB',
-    borderLeft: '4px solid #2563EB',
-  },
-  cornerBR: {
-    position: 'absolute' as const,
-    bottom: -2,
-    right: -2,
-    width: '20px',
-    height: '20px',
-    borderBottom: '4px solid #2563EB',
-    borderRight: '4px solid #2563EB',
+    marginBottom: '12px',
   },
   hint: {
+    color: 'var(--radar-text-tertiary, #6B7280)',
+    fontSize: '12px',
+    margin: 0,
+  },
+  footerHint: {
     textAlign: 'center' as const,
     padding: '16px',
     margin: 0,

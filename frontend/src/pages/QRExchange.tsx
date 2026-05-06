@@ -71,23 +71,15 @@ export function QRExchange() {
       url: myLink,
     };
 
+    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(myLink)}&text=${encodeURIComponent(shareData.text)}`;
+    
     try {
       if (navigator.share) {
         await navigator.share(shareData);
-      } else if (window.Telegram?.WebApp) {
-        const tg = window.Telegram.WebApp;
-        if (tg.openTelegramLink) {
-          const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(myLink)}&text=${encodeURIComponent(shareData.text)}`;
-          tg.openTelegramLink(shareUrl);
-        } else {
-          await navigator.clipboard.writeText(myLink);
-          setSuccess('Ссылка скопирована!');
-          setTimeout(() => setSuccess(''), 2000);
-        }
+      } else if (window.Telegram?.WebApp?.openTelegramLink) {
+        window.Telegram.WebApp.openTelegramLink(shareUrl);
       } else {
-        await navigator.clipboard.writeText(myLink);
-        setSuccess('Ссылка скопирована!');
-        setTimeout(() => setSuccess(''), 2000);
+        window.open(shareUrl, '_blank');
       }
     } catch (err: any) {
       if (err.name !== 'AbortError') {
