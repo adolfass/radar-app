@@ -16,6 +16,7 @@ export function QRExchange() {
   const [cardName, setCardName] = useState<string>('');
   const [myLink, setMyLink] = useState<string>('');
   const [hasCards, setHasCards] = useState(false);
+  const [cardId, setCardId] = useState<number | null>(null);
 
   useEffect(() => {
     loadMyQRCode();
@@ -30,16 +31,20 @@ export function QRExchange() {
       if (cards && cards.length > 0) {
         setHasCards(true);
         const primaryCard = cards.find((c: any) => c.isPrimary) || cards[0];
-        setQrDataUrl(primaryCard.qrCodeDataUrl || '');
-        setMyLink(primaryCard.shareLink || '');
+        setCardId(primaryCard.id);
+        setCardName(primaryCard.businessName || 'Моя визитка');
         
-        if (primaryCard.businessName) {
-          setCardName(primaryCard.businessName);
-        } else if (primaryCard.personalData) {
-          const pd = typeof primaryCard.personalData === 'string' 
-            ? JSON.parse(primaryCard.personalData) 
-            : primaryCard.personalData;
-          setCardName(pd.fullName || `${user?.firstName} ${user?.lastName?.[0]}.`);
+        const cardIdForShare = primaryCard.id;
+        
+        try {
+          const shareResponse = await api.post(`/business-cards/${cardIdForShare}/share`, {
+            includePrivate: false,
+          });
+          setMyLink(shareResponse.data.link);
+          setQrDataUrl(shareResponse.data.qrCodeDataUrl);
+        } catch {
+          setMyLink(primaryCard.shareLink || '');
+          setQrDataUrl(primaryCard.qrCodeDataUrl || '');
         }
       } else {
         setHasCards(false);
@@ -54,17 +59,42 @@ export function QRExchange() {
     }
   };
 
-  const handleCopyLink = async () => {
+  const handleShare = async () => {
     if (!hasCards || !myLink) {
       setError('Сначала создайте визитку');
       return;
     }
+
+    const shareData = {
+      title: 'Моя визитка RADAR',
+      text: 'Добавь меня в свой стратегический нетворкинг RADAR',
+      url: myLink,
+    };
+
     try {
-      await navigator.clipboard.writeText(myLink);
-      setSuccess('Ссылка скопирована!');
-      setTimeout(() => setSuccess(''), 2000);
-    } catch {
-      setError('Не удалось скопировать');
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else if (window.Telegram?.WebApp) {
+        const tg = window.Telegram.WebApp;
+        if (tg.openTelegramLink) {
+          const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(myLink)}&text=${encodeURIComponent(shareData.text)}`;
+          tg.openTelegramLink(shareUrl);
+        } else {
+          await navigator.clipboard.writeText(myLink);
+          setSuccess('Ссылка скопирована!');
+          setTimeout(() => setSuccess(''), 2000);
+        }
+      } else {
+        await navigator.clipboard.writeText(myLink);
+        setSuccess('Ссылка скопирована!');
+        setTimeout(() => setSuccess(''), 2000);
+      }
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        await navigator.clipboard.writeText(myLink);
+        setSuccess('Ссылка скопирована!');
+        setTimeout(() => setSuccess(''), 2000);
+      }
     }
   };
 
@@ -76,11 +106,7 @@ export function QRExchange() {
   const handleScanResult = (result: string) => {
     setShowScanner(false);
     const qrType = detectQrType(result);
-    if (qrType.type === 'radar') {
-      createContactFromScan(qrType, navigate, user?.id);
-    } else {
-      createContactFromScan(qrType, navigate);
-    }
+    createContactFromScan(qrType, navigate, user?.id);
   };
 
   const handleScanError = (err: string) => {
@@ -116,8 +142,16 @@ export function QRExchange() {
           <h1 style={styles.title}>Обмен визиткой</h1>
         </header>
 
-        {success && <div style={styles.successToast}>{success}</div>}
-        {error && <div style={styles.errorToast} onClick={() => setError('')}>{error}</div>}
+        {success && (
+          <div style={styles.successToast} onClick={() => setSuccess('')}>
+            {success}
+          </div>
+        )}
+        {error && (
+          <div style={styles.errorToast} onClick={() => setError('')}>
+            {error}
+          </div>
+        )}
 
         {!hasCards ? (
           <div style={styles.noCardSection}>
@@ -134,27 +168,31 @@ export function QRExchange() {
             </button>
           </div>
         ) : (
-          <div style={styles.qrSection}>
-            <div style={styles.qrCard}>
-              {qrDataUrl ? (
-                <img src={qrDataUrl} alt="QR код" style={styles.qrImage} />
-              ) : (
-                <div style={styles.qrPlaceholder}>
-                  <span>QR код загружается...</span>
-                </div>
-              )}
-              <p style={styles.qrLabel}>Моя визитка:</p>
-              <p style={styles.qrName}>{cardName}</p>
-              <button onClick={handleCopyLink} style={styles.copyBtn}>
-                📋 Копировать ссылку
-              </button>
+          <>
+            <div style={styles.qrSection}>
+              <div style={styles.qrCard}>
+                {qrDataUrl ? (
+                  <img src={qrDataUrl} alt="QR код" style={styles.qrImage} />
+                ) : (
+                  <div style={styles.qrPlaceholder}>
+                    <span>QR код загружается...</span>
+                  </div>
+                )}
+                <p style={styles.qrLabel}>Моя визитка:</p>
+                <p style={styles.qrName}>{cardName}</p>
+              </div>
             </div>
-          </div>
-        )}
 
-        <div style={styles.divider}>
-          <span>или</span>
-        </div>
+            <button onClick={handleShare} style={styles.shareBtn}>
+              <span style={styles.shareIcon}>📤</span>
+              <span>Поделиться визиткой</span>
+            </button>
+
+            <div style={styles.divider}>
+              <span>или</span>
+            </div>
+          </>
+        )}
 
         <button onClick={handleScanContact} style={styles.scanBtn}>
           <span style={styles.scanIcon}>📷</span>
@@ -168,9 +206,9 @@ export function QRExchange() {
         <div style={styles.instructions}>
           <h3 style={styles.instructionsTitle}>Как это работает:</h3>
           <ol style={styles.instructionsList}>
-            <li>Покажите свой QR-код — собеседник сканирует и видит вашу визитку</li>
+            <li>Нажмите "Поделиться" — отправьте ссылку на визитку</li>
+            <li>Или покажите свой QR-код — собеседник сканирует</li>
             <li>Отсканируйте QR-код собеседника — его визитка добавится в вашу сеть</li>
-            <li>Также работает ссылка — можно отправить в чат</li>
           </ol>
         </div>
       </div>
@@ -222,7 +260,8 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '12px', 
     borderRadius: '8px', 
     marginBottom: '16px', 
-    fontSize: '14px' 
+    fontSize: '14px',
+    cursor: 'pointer'
   },
   errorToast: { 
     backgroundColor: '#f44336', 
@@ -298,20 +337,27 @@ const styles: Record<string, React.CSSProperties> = {
   qrName: { 
     fontWeight: 700, 
     fontSize: '18px', 
-    margin: '0 0 16px 0',
+    margin: '0',
     color: 'var(--radar-text-primary, #fff)'
   },
-  copyBtn: { 
-    backgroundColor: 'var(--radar-accent, #2563EB)', 
+  shareBtn: { 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    gap: '12px', 
+    width: '100%', 
+    padding: '18px', 
+    marginTop: '16px',
+    backgroundColor: 'var(--radar-success, #10B981)', 
     color: '#fff', 
     border: 'none', 
-    borderRadius: '8px', 
-    padding: '12px 24px', 
-    fontSize: '14px', 
-    cursor: 'pointer', 
-    width: '100%',
-    minHeight: '44px'
+    borderRadius: '12px', 
+    fontSize: '16px', 
+    fontWeight: 600, 
+    cursor: 'pointer',
+    minHeight: '52px'
   },
+  shareIcon: { fontSize: '22px' },
   divider: { 
     display: 'flex', 
     alignItems: 'center', 
