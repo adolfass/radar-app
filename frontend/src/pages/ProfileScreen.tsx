@@ -27,20 +27,35 @@ export function ProfileScreen() {
   };
 
   const handleShare = async () => {
+    let link = '';
     try {
       const response = await getReferralLink();
+      link = response.data.link;
+    } catch {
+      alert('Ошибка при получении ссылки');
+      return;
+    }
 
+    const shareText = 'Присоединяйтесь к Radar для создания цифровых визиток и делового нетворкинга!';
+    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`;
+    
+    try {
       if (navigator.share) {
         await navigator.share({
           title: 'Radar - Цифровые визитки',
-          text: 'Присоединяйтесь к Radar для создания цифровых визиток и делового нетворкинга!',
-          url: response.data.link,
+          text: shareText,
+          url: link,
         });
+      } else if (window.Telegram?.WebApp?.openTelegramLink) {
+        window.Telegram.WebApp.openTelegramLink(shareUrl);
       } else {
-        await handleCopyReferralLink();
+        window.open(shareUrl, '_blank');
       }
-    } catch (error) {
-      console.error('Share error:', error);
+    } catch (error: any) {
+      if (error?.name !== 'AbortError') {
+        await navigator.clipboard.writeText(link);
+        alert('Ссылка скопирована!');
+      }
     }
   };
 
@@ -317,7 +332,7 @@ export function ProfileScreen() {
         </div>
       </div>
 
-      {/* My Business Cards */}
+      {/* My Business Card - ONE card per user */}
       <div style={{
         backgroundColor: 'var(--tg-theme-secondary-bg-color, #ffffff)',
         borderRadius: '12px',
@@ -335,114 +350,87 @@ export function ProfileScreen() {
             fontWeight: '600',
             color: 'var(--tg-theme-text-color, #000000)',
           }}>
-            Мои визитки
+            Моя визитка
           </h3>
           <button
-            onClick={() => navigate('/card/new')}
-            disabled={cards.length >= 7}
+            onClick={() => cards.length > 0 ? setSelectedCard(cards[0]) : navigate('/card/new')}
             style={{
               padding: '8px 16px',
-              backgroundColor: cards.length >= 7 ? 'var(--tg-theme-hint-color, #cccccc)' : 'var(--tg-theme-button-color, #2481cc)',
+              backgroundColor: 'var(--tg-theme-button-color, #2481cc)',
               color: 'var(--tg-theme-button-text-color, #ffffff)',
               border: 'none',
               borderRadius: '8px',
-              cursor: cards.length >= 7 ? 'not-allowed' : 'pointer',
+              cursor: 'pointer',
               fontSize: '14px',
             }}
           >
-            + Новая
+            {cards.length > 0 ? '📋 QR' : '+ Создать'}
           </button>
         </div>
 
         {cards.length === 0 ? (
-          <p style={{
-            fontSize: '14px',
-            color: 'var(--tg-theme-hint-color, #999999)',
+          <div style={{
             textAlign: 'center',
             padding: '20px',
           }}>
-            У вас пока нет визиток
-          </p>
+            <p style={{
+              fontSize: '14px',
+              color: 'var(--tg-theme-hint-color, #999999)',
+              marginBottom: '12px',
+            }}>
+              У вас пока нет визитки
+            </p>
+            <button
+              onClick={() => navigate('/card/new')}
+              style={{
+                padding: '12px 24px',
+                backgroundColor: 'var(--tg-theme-button-color, #2481cc)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '600',
+              }}
+            >
+              Создать визитку
+            </button>
+          </div>
         ) : (
-          <div>
-            {cards.map((card) => (
-              <div
-                key={card.id}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '12px',
-                  backgroundColor: 'var(--tg-theme-bg-color, #f5f5f5)',
-                  borderRadius: '8px',
-                  marginBottom: '8px',
-                }}
-              >
-                <div style={{ flex: 1 }}>
-                  <p style={{
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: 'var(--tg-theme-text-color, #000000)',
-                  }}>
-                    {String(card.businessName || 'Без названия')}
-                  </p>
-                  <p style={{
-                    fontSize: '12px',
-                    color: 'var(--tg-theme-hint-color, #999999)',
-                  }}>
-                    {card.personalData ? JSON.parse(String(card.personalData))?.fullName : ''}
-                  </p>
-                </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button
-                    onClick={() => setSelectedCard(card)}
-                    style={{
-                      padding: '6px 12px',
-                      backgroundColor: 'var(--tg-theme-button-color, #2481cc)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                    }}
-                  >
-                    📋 QR
-                  </button>
-                  <button
-                    onClick={() => navigate(`/card/${card.id}/edit`)}
-                    style={{
-                      padding: '6px 12px',
-                      backgroundColor: 'transparent',
-                      color: 'var(--tg-theme-button-color, #2481cc)',
-                      border: '1px solid var(--tg-theme-button-color, #2481cc)',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                    }}
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (confirm('Удалить визитку?')) {
-                        deleteCard(Number(card.id));
-                      }
-                    }}
-                    style={{
-                      padding: '6px 12px',
-                      backgroundColor: 'transparent',
-                      color: '#ff3b30',
-                      border: '1px solid #ff3b30',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                    }}
-                  >
-                    🗑️
-                  </button>
-                </div>
-              </div>
-            ))}
+          <div
+            onClick={() => setSelectedCard(cards[0])}
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '16px',
+              backgroundColor: 'var(--tg-theme-bg-color, #f5f5f5)',
+              borderRadius: '12px',
+              cursor: 'pointer',
+            }}
+          >
+            <div style={{ flex: 1 }}>
+              <p style={{
+                fontSize: '16px',
+                fontWeight: '600',
+                color: 'var(--tg-theme-text-color, #000000)',
+                marginBottom: '4px',
+              }}>
+                {String(cards[0].businessName || 'Моя визитка')}
+              </p>
+              <p style={{
+                fontSize: '12px',
+                color: 'var(--tg-theme-hint-color, #999999)',
+              }}>
+                {cards[0].personalData ? JSON.parse(String(cards[0].personalData))?.fullName : ''}
+              </p>
+            </div>
+            <span style={{
+              fontSize: '20px',
+              color: 'var(--tg-theme-button-color, #2481cc)',
+            }}>
+              →
+            </span>
           </div>
         )}
       </div>

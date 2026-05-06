@@ -1,15 +1,19 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBusinessCardDto } from './dto/create-business-card.dto';
 import { UpdateBusinessCardDto } from './dto/update-business-card.dto';
+import { ShareBusinessCardDto } from './dto/share-business-card.dto';
 import { v4 as uuidv4 } from 'uuid';
 import * as QRCode from 'qrcode';
+import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class BusinessCardService {
   private frontendUrl: string;
   private botUsername: string;
+  private shareSecret: string;
+  private readonly TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000;
 
   constructor(
     private prisma: PrismaService,
@@ -17,14 +21,66 @@ export class BusinessCardService {
   ) {
     this.frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:5173';
     this.botUsername = this.configService.get('TELEGRAM_BOT_USERNAME') || 'radar_test_bot';
+    this.shareSecret = this.configService.get('SHARE_SECRET') || 'dev-secret-change-in-production';
   }
 
   private getShareLink(contactId: string): string {
     return `https://t.me/${this.botUsername}?startapp=${contactId}`;
   }
 
-  private getWebLink(contactId: string): string {
-    return `${this.frontendUrl}/card/${contactId}`;
+  private getSignedShareLink(contactId: string, includePrivate: boolean = false): string {
+    const exp = Date.now() + this.TOKEN_EXPIRY_MS;
+    const payload = JSON.stringify({ contactId, includePrivate, exp });
+    const signature = crypto
+      .createHmac('sha256', this.shareSecret)
+      .update(payload)
+      .digest('hex');
+    const token = Buffer.from(`${payload}.${signature}`).toString('base64url');
+    return `https://t.me/${this.botUsername}?startapp=share_${token}`;
+  }
+
+  async verifyShareToken(token: string): Promise<{ contactId: string; includePrivate: boolean }> {
+    try {
+      const decoded = Buffer.from(token, 'base64url').toString('utf8');
+      const [payloadStr, signature] = decoded.split('.');
+
+      const expected = crypto
+        .createHmac('sha256', this.shareSecret)
+        .update(payloadStr)
+        .digest('hex');
+
+      if (signature !== expected) {
+        throw new BadRequestException('Invalid share token signature');
+      }
+
+      const payload = JSON.parse(payloadStr);
+
+      if (payload.exp < Date.now()) {
+        throw new BadRequestException('Share link has expired');
+      }
+
+      return { contactId: payload.contactId, includePrivate: payload.includePrivate };
+    } catch (error: any) {
+      if (error instanceof BadRequestException) throw error;
+      throw new BadRequestException('Invalid or expired share token');
+    }
+  }
+
+  async generateShareLink(cardId: number, userId: number, dto: ShareBusinessCardDto) {
+    const card = await this.prisma.businessCard.findUnique({ where: { id: cardId } });
+
+    if (!card || !card.isActive) {
+      throw new NotFoundException('Business card not found');
+    }
+
+    if (card.userId !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    const link = this.getSignedShareLink(card.contactId, dto.includePrivate);
+    const qrCodeDataUrl = await QRCode.toDataURL(link, { width: 300, margin: 2 });
+
+    return { link, qrCodeDataUrl, expiresIn: '24 hours' };
   }
 
   async findAll(userId: number) {
@@ -102,6 +158,14 @@ export class BusinessCardService {
   }
 
   async create(userId: number, createDto: CreateBusinessCardDto) {
+    const existingCards = await this.prisma.businessCard.count({
+      where: { userId, isActive: true }
+    });
+    
+    if (existingCards >= 1) {
+      throw new BadRequestException('Вы можете иметь только одну визитку. Отредактируйте существующую.');
+    }
+
     const contactId = uuidv4();
 
     const qrData = this.getShareLink(contactId);
