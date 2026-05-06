@@ -4,6 +4,20 @@ import * as Sentry from '@sentry/react';
 import App from './App.tsx'
 import './index.css'
 
+if (!(window as any).Telegram?.WebApp) {
+  (window as any).Telegram = {
+    WebApp: {
+      ready: () => {},
+      expand: () => {},
+      initData: '',
+      initDataUnsafe: {},
+      MainButton: { show: () => {}, hide: () => {}, setText: () => {}, onClick: () => {} },
+      BackButton: { show: () => {}, hide: () => {}, onClick: () => {} },
+      SettingsButton: { show: () => {}, hide: () => {} },
+    }
+  };
+}
+
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
   integrations: [
