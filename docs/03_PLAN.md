@@ -195,17 +195,21 @@ ssh root@157.22.175.40 "psql -U postgres -d radar -c \"SELECT * FROM business_ca
 
 ## 3.6 Estimation
 
-| Task | estimation | Dependencies |
-|------|------------|--------------|
-| BUG-004 investigation | 2h | None |
-| Refresh token | 2d | None |
-| Sentry integration | 1d | None |
-| CI/CD setup | 3d | Refresh token |
-| AI Classifier | 5d | None |
-| Network Graph | 5d | AI Classifier |
-| Graph DB | 3d | Network Graph |
+| Task | estimation | Dependencies | Status |
+|------|------------|--------------|--------|
+| Refresh token | 2d | None | 📋 TODO |
+| CI/CD setup | 3d | Refresh token | 📋 TODO |
+| AI Classifier | 5d | None | 📋 TODO |
+| Network Graph | 5d | AI Classifier | 📋 TODO |
+| Graph DB | 3d | Network Graph | 📋 TODO |
 
-**Total remaining**: ~19 days
+**Total remaining**: ~18 days
+
+### Уже реализовано ✅
+
+- [x] Zod validation (`src/common/validations/zod.*`)
+- [x] Sentry error monitoring (`@sentry/node` + `GlobalExceptionFilter`)
+- [x] Swagger API docs at `/api/docs`
 
 ---
 
@@ -213,21 +217,18 @@ ssh root@157.22.175.40 "psql -U postgres -d radar -c \"SELECT * FROM business_ca
 
 ### Immediate (эта неделя)
 
-1. **BUG-004**: Investigate business card "not found"
-   - Проверить базу данных
-   - Проверить API responses
-   - Воспроизвести на устройстве
+1. **BUG-005**: QR Scanner крашит WebView
+   - ✅ Исправлен QRScanner.tsx
+   - ⏳ Тестирование на устройстве
 
 2. **BUG-002**: Test QR scanner fallback
    - Деплоить изменения
    - Протестировать на Xiaomi
-   - Если не работает — написать custom fallback
 
 ### Short-term (следующие 2 недели)
 
 1. Реализовать refresh token
-2. Интегрировать Sentry
-3. CI/CD pipeline
+2. CI/CD pipeline
 
 ### Medium-term (Q3)
 
