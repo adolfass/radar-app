@@ -155,7 +155,7 @@ npm run test:e2e
 
 ## Known Issues
 
-- [BUG-001] Bottom nav overlaps content - Fixed
-- [BUG-002] QR scanner on Android - Custom fallback implemented
-- [BUG-003] Navigator scrolling - Fixed
-- [BUG-004] Business card "not found" - Investigating
+- [BUG-001] Bottom nav overlaps content - ✅ Fixed
+- [BUG-002] QR scanner on Android - ⚠️ Fallback implemented
+- [BUG-003] Navigator scrolling - ✅ Fixed
+- [BUG-004] QR page shows blank when no cards - ✅ Fixed

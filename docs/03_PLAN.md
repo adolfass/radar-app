@@ -37,6 +37,15 @@
 | Network Graph | 🔄 | Neo4j integration |
 | E2E Tests | 🔄 | Playwright |
 
+### Исправленные баги (✅)
+
+| ID | Описание | Status |
+|----|----------|--------|
+| BUG-001 | Bottom nav overlaps content | ✅ Fixed |
+| BUG-002 | QR scanner not working on Android | ⚠️ Fallback |
+| BUG-003 | Navigator scrolling broken | ✅ Fixed |
+| BUG-004 | QR page shows blank when no cards | ✅ Fixed |
+
 ### Запланировано (📋)
 
 | Компонент | Приоритет | estimation |
