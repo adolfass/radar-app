@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useBusinessCards } from '../hooks/useApi';
 import { useAuth } from '../hooks/useAuth';
 
 export function BusinessCardForm() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const { cards, createCard, updateCard } = useBusinessCards();
   const { user } = useAuth();
 
@@ -19,18 +20,53 @@ export function BusinessCardForm() {
     telegram: '',
     whatsapp: '',
     linkedin: '',
+    notes: '',
   });
 
   const [loading, setLoading] = useState(false);
+  const [fromScan, setFromScan] = useState(false);
 
   useEffect(() => {
+    // Pre-fill from query params (from QR scan)
+    const fullName = searchParams.get('fullName');
+    const firstName = searchParams.get('firstName');
+    const lastName = searchParams.get('lastName');
+    const businessName = searchParams.get('businessName');
+    const position = searchParams.get('position');
+    const phone = searchParams.get('phone');
+    const email = searchParams.get('email');
+    const website = searchParams.get('website');
+    const telegram = searchParams.get('telegram');
+    const linkedin = searchParams.get('linkedin');
+    const notes = searchParams.get('notes');
+
+    if (fullName || firstName || lastName || businessName) {
+      setFromScan(true);
+      const name = fullName || [firstName, lastName].filter(Boolean).join(' ');
+      setFormData(prev => ({
+        ...prev,
+        fullName: name || prev.fullName,
+        firstName: firstName || prev.firstName,
+        lastName: lastName || prev.lastName,
+        businessName: businessName || prev.businessName,
+        position: position || prev.position,
+        phone: phone || prev.phone,
+        email: email || prev.email,
+        website: website || prev.website,
+        telegram: telegram || prev.telegram,
+        linkedin: linkedin || prev.linkedin,
+        notes: notes || prev.notes,
+      }));
+    }
+
     if (id) {
       const card = cards.find(c => c.id === parseInt(id));
       if (card) {
         const personalData = card.personalData ? JSON.parse(card.personalData) : {};
         const resources = card.resources ? JSON.parse(card.resources) : {};
 
-        setFormData({
+        setFormData(prev => ({
+          ...prev,
           businessName: card.businessName || '',
           fullName: personalData.fullName || '',
           position: personalData.position || '',
@@ -40,9 +76,9 @@ export function BusinessCardForm() {
           telegram: resources.telegram || '',
           whatsapp: resources.whatsapp || '',
           linkedin: resources.linkedin || '',
-        });
+        }));
       }
-    } else if (user && !formData.fullName && !formData.telegram) {
+    } else if (user && !formData.fullName && !formData.telegram && !fromScan) {
       const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ');
       setFormData(prev => ({
         ...prev,
@@ -50,7 +86,7 @@ export function BusinessCardForm() {
         telegram: prev.telegram || (user.username ? `@${user.username}` : ''),
       }));
     }
-  }, [id, cards, user]);
+  }, [id, cards, user, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +105,7 @@ export function BusinessCardForm() {
         telegram: formData.telegram,
         whatsapp: formData.whatsapp,
         linkedin: formData.linkedin,
+        notes: formData.notes,
       };
 
       if (id) {
@@ -94,7 +131,7 @@ export function BusinessCardForm() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -106,6 +143,9 @@ export function BusinessCardForm() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
       <header style={{
         marginBottom: '24px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
       }}>
         <button
           onClick={() => navigate(-1)}
@@ -115,19 +155,34 @@ export function BusinessCardForm() {
             fontSize: '24px',
             cursor: 'pointer',
             color: 'var(--tg-theme-text-color, #000000)',
-            marginBottom: '16px',
           }}
         >
-          ← Назад
+          ←
         </button>
         <h1 style={{
           fontSize: '24px',
           fontWeight: 'bold',
           color: 'var(--tg-theme-text-color, #000000)',
+          margin: 0,
         }}>
-          {id ? 'Редактировать визитку' : 'Новая визитка'}
+          {fromScan ? 'Добавить контакт' : (id ? 'Редактировать визитку' : 'Новая визитка')}
         </h1>
       </header>
+
+      {fromScan && (
+        <div style={{
+          backgroundColor: 'rgba(48, 209, 88, 0.15)',
+          border: '1px solid rgba(48, 209, 88, 0.3)',
+          color: '#30d158',
+          padding: '12px 16px',
+          borderRadius: '12px',
+          marginBottom: '16px',
+          fontSize: '14px',
+          fontWeight: '500',
+        }}>
+          📱 Контакт из QR-кода — проверьте данные и сохраните
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
         <div style={{
@@ -152,7 +207,7 @@ export function BusinessCardForm() {
               color: 'var(--tg-theme-text-color, #000000)',
               marginBottom: '8px',
             }}>
-              Название компании *
+              Название компании
             </label>
             <input
               type="text"
@@ -160,7 +215,6 @@ export function BusinessCardForm() {
               value={formData.businessName}
               onChange={handleChange}
               placeholder="ООО «Пример»"
-              required
               style={{
                 width: '100%',
                 padding: '12px',
@@ -303,7 +357,7 @@ export function BusinessCardForm() {
           backgroundColor: 'var(--tg-theme-secondary-bg-color, #ffffff)',
           borderRadius: '12px',
           padding: '16px',
-          marginBottom: '24px',
+          marginBottom: '16px',
         }}>
           <h2 style={{
             fontSize: '18px',
@@ -314,39 +368,147 @@ export function BusinessCardForm() {
             Соцсети и сайты
           </h2>
 
-          {[
-            { name: 'website', label: 'Сайт', placeholder: 'https://example.com' },
-            { name: 'telegram', label: 'Telegram', placeholder: '@username' },
-            { name: 'whatsapp', label: 'WhatsApp', placeholder: '+79991234567' },
-            { name: 'linkedin', label: 'LinkedIn', placeholder: 'linkedin.com/in/username' },
-          ].map((field) => (
-            <div key={field.name} style={{ marginBottom: '16px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              color: 'var(--tg-theme-text-color, #000000)',
+              marginBottom: '8px',
+            }}>
+              Сайт
+            </label>
+            <input
+              type="text"
+              name="website"
+              value={formData.website}
+              onChange={handleChange}
+              placeholder="https://example.com"
+              style={{
+                width: '100%',
+                padding: '12px',
+                fontSize: '16px',
+                border: '1px solid var(--tg-theme-hint-color, #e0e0e0)',
+                borderRadius: '8px',
+                backgroundColor: 'var(--tg-theme-bg-color, #f5f5f5)',
                 color: 'var(--tg-theme-text-color, #000000)',
-                marginBottom: '8px',
-              }}>
-                {field.label}
-              </label>
-              <input
-                type="text"
-                name={field.name}
-                value={formData[field.name as keyof typeof formData]}
-                onChange={handleChange}
-                placeholder={field.placeholder}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  fontSize: '16px',
-                  border: '1px solid var(--tg-theme-hint-color, #e0e0e0)',
-                  borderRadius: '8px',
-                  backgroundColor: 'var(--tg-theme-bg-color, #f5f5f5)',
-                  color: 'var(--tg-theme-text-color, #000000)',
-                }}
-              />
-            </div>
-          ))}
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              color: 'var(--tg-theme-text-color, #000000)',
+              marginBottom: '8px',
+            }}>
+              Telegram
+            </label>
+            <input
+              type="text"
+              name="telegram"
+              value={formData.telegram}
+              onChange={handleChange}
+              placeholder="@username"
+              style={{
+                width: '100%',
+                padding: '12px',
+                fontSize: '16px',
+                border: '1px solid var(--tg-theme-hint-color, #e0e0e0)',
+                borderRadius: '8px',
+                backgroundColor: 'var(--tg-theme-bg-color, #f5f5f5)',
+                color: 'var(--tg-theme-text-color, #000000)',
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              color: 'var(--tg-theme-text-color, #000000)',
+              marginBottom: '8px',
+            }}>
+              WhatsApp
+            </label>
+            <input
+              type="text"
+              name="whatsapp"
+              value={formData.whatsapp}
+              onChange={handleChange}
+              placeholder="+79991234567"
+              style={{
+                width: '100%',
+                padding: '12px',
+                fontSize: '16px',
+                border: '1px solid var(--tg-theme-hint-color, #e0e0e0)',
+                borderRadius: '8px',
+                backgroundColor: 'var(--tg-theme-bg-color, #f5f5f5)',
+                color: 'var(--tg-theme-text-color, #000000)',
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              color: 'var(--tg-theme-text-color, #000000)',
+              marginBottom: '8px',
+            }}>
+              LinkedIn
+            </label>
+            <input
+              type="text"
+              name="linkedin"
+              value={formData.linkedin}
+              onChange={handleChange}
+              placeholder="linkedin.com/in/username"
+              style={{
+                width: '100%',
+                padding: '12px',
+                fontSize: '16px',
+                border: '1px solid var(--tg-theme-hint-color, #e0e0e0)',
+                borderRadius: '8px',
+                backgroundColor: 'var(--tg-theme-bg-color, #f5f5f5)',
+                color: 'var(--tg-theme-text-color, #000000)',
+              }}
+            />
+          </div>
+        </div>
+
+        <div style={{
+          backgroundColor: 'var(--tg-theme-secondary-bg-color, #ffffff)',
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '24px',
+        }}>
+          <h2 style={{
+            fontSize: '18px',
+            fontWeight: '600',
+            color: 'var(--tg-theme-text-color, #000000)',
+            marginBottom: '16px',
+          }}>
+            Заметки
+          </h2>
+          <textarea
+            name="notes"
+            value={formData.notes}
+            onChange={handleChange}
+            placeholder="Дополнительная информация о контакте..."
+            rows={3}
+            style={{
+              width: '100%',
+              padding: '12px',
+              fontSize: '16px',
+              border: '1px solid var(--tg-theme-hint-color, #e0e0e0)',
+              borderRadius: '8px',
+              backgroundColor: 'var(--tg-theme-bg-color, #f5f5f5)',
+              color: 'var(--tg-theme-text-color, #000000)',
+              resize: 'vertical',
+              fontFamily: 'inherit',
+            }}
+          />
         </div>
 
         <button

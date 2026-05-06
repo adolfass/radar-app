@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../lib/api';
+import QRCode from 'qrcode';
 import { useAuthStore } from '../store/authStore';
-import { startNativeScanner, parseQrData } from '../utils/qr-scanner';
-import { QRCodeSVG as QRCode } from 'qrcode.react';
+import { detectQrType, createContactFromScan, QRScanType } from '../utils/qr-scanner';
+import { QRScanner } from '../components/QRScanner';
 
 const BOT_USERNAME = 'radar_strateg_bot';
 
@@ -13,6 +13,9 @@ export function QRExchange() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
+  const [showScanner, setShowScanner] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     setLoading(false);
@@ -21,6 +24,23 @@ export function QRExchange() {
   const deeplinkUrl = user?.id 
     ? `https://t.me/${BOT_USERNAME}?start=contact_${user.id}`
     : '';
+
+  useEffect(() => {
+    if (deeplinkUrl && canvasRef.current) {
+      QRCode.toDataURL(deeplinkUrl, {
+        width: 280,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#ffffff',
+        },
+      }).then(url => {
+        setQrDataUrl(url);
+      }).catch(err => {
+        console.error('QR generation error:', err);
+      });
+    }
+  }, [deeplinkUrl]);
 
   const handleCopyLink = async () => {
     try {
@@ -32,39 +52,28 @@ export function QRExchange() {
     }
   };
 
-  const handleScanContact = async () => {
+  const handleScanContact = () => {
     setError('');
-    const tg = (window as any).Telegram?.WebApp;
+    setShowScanner(true);
+  };
+
+  const handleScanResult = (result: string) => {
+    setShowScanner(false);
     
-    console.log('[QR] scanQrPopup available:', !!tg?.scanQrPopup);
-    console.log('[QR] WebApp version:', tg?.version);
+    const qrType = detectQrType(result);
     
-    // Try Telegram's native scanner first
-    if (tg?.scanQrPopup) {
-      try {
-        await startNativeScanner(
-          (result) => {
-            const parsed = parseQrData(result.data);
-            if (parsed) {
-              navigate(`/scan-confirm/${parsed.userId}`);
-            } else {
-              setError('Неверный QR-код. Используйте визитку RADAR.');
-            }
-          },
-          (err) => {
-            if (err !== 'Сканирование отменено') {
-              setError(err);
-            }
-          }
-        );
-        return;
-      } catch (err) {
-        console.log('[QR] Native scanner failed, trying fallback');
-      }
+    if (qrType.type === 'radar') {
+      createContactFromScan(qrType, navigate, user?.id);
+    } else {
+      createContactFromScan(qrType, navigate);
     }
-    
-    // Fallback: use window.location with manual URL input
-    setError('Введите ссылку-визитку вручную в боте @radar_strateg_bot');
+  };
+
+  const handleScanError = (err: string) => {
+    if (err !== 'closed') {
+      setError(err);
+    }
+    setShowScanner(false);
   };
 
   if (loading) {
@@ -77,239 +86,85 @@ export function QRExchange() {
 
   return (
     <div style={styles.container}>
+      {showScanner && (
+        <QRScanner
+          onScan={handleScanResult}
+          onError={handleScanError}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
+      
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
-      {/* Header */}
-      <header style={styles.header}>
-        <button onClick={() => navigate(-1)} style={styles.backBtn}>
-          ← Назад
-        </button>
-        <h1 style={styles.title}>Обмен визиткой</h1>
-      </header>
+        <header style={styles.header}>
+          <button onClick={() => navigate(-1)} style={styles.backBtn}>← Назад</button>
+          <h1 style={styles.title}>Обмен визиткой</h1>
+        </header>
 
-      {/* Success message */}
-      {success && (
-        <div style={styles.successToast}>{success}</div>
-      )}
+        {success && <div style={styles.successToast}>{success}</div>}
+        {error && <div style={styles.errorToast}>{error}</div>}
 
-      {/* Error message */}
-      {error && (
-        <div style={styles.errorToast}>{error}</div>
-      )}
-
-      {/* Give Card Section */}
-      <section style={styles.section}>
-        <h2 style={styles.sectionTitle}>📤 Дать визитку отсканировать</h2>
-        
-        {deeplinkUrl && (
-          <>
-            <div style={styles.qrContainer}>
-              <QRCode 
-                value={deeplinkUrl} 
-                size={220}
-                level="M"
-                includeMargin={false}
-              />
-            </div>
-
-            <div style={styles.linkContainer}>
-              <p style={styles.linkLabel}>Ссылка-визитка:</p>
-              <div style={styles.linkRow}>
-                <input 
-                  type="text" 
-                  value={deeplinkUrl} 
-                  readOnly 
-                  style={styles.linkInput}
-                />
-                <button onClick={handleCopyLink} style={styles.copyBtn}>
-                  📋
-                </button>
+        <div style={styles.qrSection}>
+          <div style={styles.qrCard}>
+            {qrDataUrl ? (
+              <img src={qrDataUrl} alt="QR код" style={styles.qrImage} />
+            ) : (
+              <div style={styles.qrPlaceholder}>
+                <div style={styles.qrLoading}>Генерация QR...</div>
               </div>
-            </div>
+            )}
+            <p style={styles.qrLabel}>Моя визитка:</p>
+            <p style={styles.qrName}>{user?.firstName} {user?.lastName?.[0]}.</p>
+            <button onClick={handleCopyLink} style={styles.copyBtn}>📋 Копировать ссылку</button>
+          </div>
+        </div>
 
-            <p style={styles.hint}>
-              Покажи этот QR-код собеседнику для сканирования
-            </p>
-          </>
-        )}
-      </section>
+        <div style={styles.divider}>
+          <span>или</span>
+        </div>
 
-      {/* Divider */}
-      <div style={styles.divider}>
-        <span style={styles.dividerText}>или</span>
-      </div>
-
-      {/* Scan Section */}
-      <section style={styles.section}>
-        <h2 style={styles.sectionTitle}>📷 Отсканировать визитку собеседника</h2>
-        
         <button onClick={handleScanContact} style={styles.scanBtn}>
           <span style={styles.scanIcon}>📷</span>
-          <span>Запустить сканер</span>
+          <span>Отсканировать визитку</span>
         </button>
-        
+
         <p style={styles.hint}>
           Наведите камеру на QR-код визитки собеседника
         </p>
-      </section>
 
-      {/* Instructions */}
-      <div style={styles.instruction}>
-        <p style={styles.instructionTitle}>Как это работает:</p>
-        <ol style={styles.instructionList}>
-          <li>Покажи свой QR-код — собеседник сканирует и видит твою визитку</li>
-          <li>Отсканируй QR-код собеседника — его визитка добавится в твою сеть</li>
-          <li>Также работает ссылка — можно отправить в чат</li>
-        </ol>
+        <div style={styles.instructions}>
+          <h3 style={styles.instructionsTitle}>Как это работает:</h3>
+          <ol style={styles.instructionsList}>
+            <li>Покажите свой QR-код — собеседник сканирует и видит вашу визитку</li>
+            <li>Отсканируйте QR-код собеседника — его визитка добавится в вашу сеть</li>
+            <li>Также работает ссылка — можно отправить в чат</li>
+          </ol>
+        </div>
       </div>
-    </div>
     </div>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  container: {height: '100vh', display: 'flex', flexDirection: 'column'},
-  loadingText: {
-    textAlign: 'center',
-    color: 'var(--radar-text-secondary)',
-    paddingTop: '100px',
-  },
-  header: {
-    marginBottom: '24px',
-  },
-  backBtn: {
-    background: 'none',
-    border: 'none',
-    color: 'var(--radar-accent)',
-    fontSize: '16px',
-    fontWeight: '600',
-    padding: '8px 0',
-    marginBottom: '8px',
-  },
-  title: {
-    fontSize: '24px',
-    fontWeight: '700',
-    color: 'var(--radar-text)',
-  },
-  successToast: {
-    backgroundColor: 'rgba(48, 209, 88, 0.15)',
-    border: '1px solid rgba(48, 209, 88, 0.3)',
-    color: '#30d158',
-    padding: '12px 16px',
-    borderRadius: '12px',
-    marginBottom: '16px',
-    fontSize: '14px',
-    fontWeight: '500',
-  },
-  errorToast: {
-    backgroundColor: 'rgba(255, 59, 48, 0.15)',
-    border: '1px solid rgba(255, 59, 48, 0.3)',
-    color: '#ff3b30',
-    padding: '12px 16px',
-    borderRadius: '12px',
-    marginBottom: '16px',
-    fontSize: '14px',
-    fontWeight: '500',
-  },
-  section: {
-    marginBottom: '24px',
-  },
-  sectionTitle: {
-    fontSize: '18px',
-    fontWeight: '700',
-    marginBottom: '16px',
-    color: 'var(--radar-text)',
-  },
-  qrContainer: {
-    backgroundColor: '#fff',
-    borderRadius: '16px',
-    padding: '24px',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: '16px',
-  },
-  linkContainer: {
-    marginBottom: '12px',
-  },
-  linkLabel: {
-    fontSize: '12px',
-    color: 'var(--radar-text-secondary)',
-    marginBottom: '8px',
-  },
-  linkRow: {
-    display: 'flex',
-    gap: '8px',
-  },
-  linkInput: {
-    flex: 1,
-    padding: '10px 12px',
-    backgroundColor: 'var(--radar-surface)',
-    border: '1px solid var(--radar-border)',
-    borderRadius: '8px',
-    color: 'var(--radar-text)',
-    fontSize: '13px',
-  },
-  copyBtn: {
-    padding: '10px 14px',
-    backgroundColor: 'var(--radar-accent)',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '18px',
-    cursor: 'pointer',
-  },
-  hint: {
-    fontSize: '13px',
-    color: 'var(--radar-text-tertiary)',
-    textAlign: 'center',
-  },
-  divider: {
-    display: 'flex',
-    alignItems: 'center',
-    margin: '24px 0',
-  },
-  dividerText: {
-    margin: '0 auto',
-    padding: '0 16px',
-    backgroundColor: 'var(--radar-bg)',
-    color: 'var(--radar-text-tertiary)',
-    fontSize: '14px',
-  },
-  scanBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '12px',
-    width: '100%',
-    padding: '18px',
-    backgroundColor: 'var(--radar-accent)',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '12px',
-    fontSize: '16px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    marginBottom: '12px',
-  },
-  scanIcon: {
-    fontSize: '22px',
-  },
-  instruction: {
-    backgroundColor: 'var(--radar-surface)',
-    border: '1px solid var(--radar-border)',
-    borderRadius: '12px',
-    padding: '16px',
-  },
-  instructionTitle: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: 'var(--radar-text)',
-    marginBottom: '12px',
-  },
-  instructionList: {
-    margin: 0,
-    paddingLeft: '20px',
-    fontSize: '13px',
-    color: 'var(--radar-text-secondary)',
-    lineHeight: '1.6',
-  },
+  container: { height: '100vh', display: 'flex', flexDirection: 'column' },
+  loadingText: { textAlign: 'center', color: 'var(--radar-text-secondary)', paddingTop: '100px' },
+  header: { marginBottom: '24px' },
+  backBtn: { background: 'none', border: 'none', color: 'var(--radar-accent)', fontSize: '16px', cursor: 'pointer', padding: 0 },
+  title: { fontSize: '20px', fontWeight: 700, margin: '8px 0 0 0' },
+  successToast: { backgroundColor: '#4CAF50', color: '#fff', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' },
+  errorToast: { backgroundColor: '#f44336', color: '#fff', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' },
+  qrSection: { display: 'flex', justifyContent: 'center' },
+  qrCard: { backgroundColor: 'var(--radar-surface)', borderRadius: '16px', padding: '24px', textAlign: 'center', width: '100%' },
+  qrImage: { width: '200px', height: '200px', margin: '0 auto 16px', display: 'block' },
+  qrPlaceholder: { width: '200px', height: '200px', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f0f0f0', borderRadius: '12px' },
+  qrLoading: { color: 'var(--radar-text-secondary)', fontSize: '14px' },
+  qrLabel: { color: 'var(--radar-text-secondary)', margin: '0 0 4px 0', fontSize: '14px' },
+  qrName: { fontWeight: 700, fontSize: '18px', margin: '0 0 16px 0' },
+  copyBtn: { backgroundColor: 'var(--radar-accent)', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 24px', fontSize: '14px', cursor: 'pointer', width: '100%' },
+  divider: { display: 'flex', alignItems: 'center', margin: '24px 0', gap: '16px' },
+  scanBtn: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', width: '100%', padding: '18px', backgroundColor: 'var(--radar-accent)', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' },
+  scanIcon: { fontSize: '22px' },
+  hint: { textAlign: 'center', color: 'var(--radar-text-secondary)', marginTop: '12px', fontSize: '14px' },
+  instructions: { backgroundColor: 'var(--radar-surface)', borderRadius: '12px', padding: '16px', marginTop: '24px' },
+  instructionsTitle: { fontSize: '14px', fontWeight: 600, margin: '0 0 12px 0' },
+  instructionsList: { margin: 0, paddingLeft: '20px', fontSize: '13px', color: 'var(--radar-text-secondary)', lineHeight: 1.6 },
 };
