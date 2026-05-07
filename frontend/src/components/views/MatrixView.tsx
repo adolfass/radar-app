@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 interface Contact {
   id: number;
-  firstName: string;
+  firstName?: string;
   lastName?: string;
   circle: 'support' | 'productivity' | 'development';
   role?: string;
@@ -99,7 +99,7 @@ export function MatrixView({ contacts, onContactSelect }: MatrixViewProps) {
                     style={styles.contactChip}
                     onClick={() => handleContactClick(contact)}
                   >
-                    {contact.firstName[0]}{contact.lastName?.[0] || ''}
+                    {contact.firstName?.[0]}{contact.lastName?.[0] || ''}
                   </div>
                 ))}
                 {quadrants.vampires.length > 5 && (
@@ -123,7 +123,7 @@ export function MatrixView({ contacts, onContactSelect }: MatrixViewProps) {
                     style={{ ...styles.contactChip, borderColor: QUADRANTS[0].color }}
                     onClick={() => handleContactClick(contact)}
                   >
-                    {contact.firstName[0]}{contact.lastName?.[0] || ''}
+                    {contact.firstName?.[0]}{contact.lastName?.[0] || ''}
                   </div>
                 ))}
                 {quadrants.stars.length > 5 && (
@@ -149,7 +149,7 @@ export function MatrixView({ contacts, onContactSelect }: MatrixViewProps) {
                     style={{ ...styles.contactChip, borderColor: QUADRANTS[3].color }}
                     onClick={() => handleContactClick(contact)}
                   >
-                    {contact.firstName[0]}{contact.lastName?.[0] || ''}
+                    {contact.firstName?.[0]}{contact.lastName?.[0] || ''}
                   </div>
                 ))}
                 {quadrants.isolates.length > 5 && (
@@ -173,7 +173,7 @@ export function MatrixView({ contacts, onContactSelect }: MatrixViewProps) {
                     style={{ ...styles.contactChip, borderColor: QUADRANTS[1].color }}
                     onClick={() => handleContactClick(contact)}
                   >
-                    {contact.firstName[0]}{contact.lastName?.[0] || ''}
+                    {contact.firstName?.[0]}{contact.lastName?.[0] || ''}
                   </div>
                 ))}
                 {quadrants.bridges.length > 5 && (
