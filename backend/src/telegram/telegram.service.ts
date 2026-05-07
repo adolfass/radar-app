@@ -111,6 +111,10 @@ export class TelegramService extends Telegraf<Context> implements OnModuleInit {
 
   private setupBot() {
     this.command('start', async (ctx: any) => {
+      const startParam = ctx.startPayload || '';
+      const webAppUrl = (this.configService.get('FRONTEND_URL') || 'https://radar.strateg.space')
+        + (startParam ? `?start=${encodeURIComponent(startParam)}` : '');
+
       await ctx.reply(
         '👋 Добро пожаловать в Radar Bot!\n\n' +
           '📇 Создавайте цифровые визитки\n' +
@@ -124,9 +128,7 @@ export class TelegramService extends Telegraf<Context> implements OnModuleInit {
               [
                 {
                   text: '🚀 Открыть приложение',
-                  web_app: {
-                    url: this.configService.get('FRONTEND_URL') || 'https://radar.strateg.space',
-                  },
+                  web_app: { url: webAppUrl },
                 },
               ],
             ],
