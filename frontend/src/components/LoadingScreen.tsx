@@ -5,21 +5,21 @@ export function LoadingScreen() {
       justifyContent: 'center',
       alignItems: 'center',
       height: '100vh',
-      backgroundColor: 'var(--tg-theme-bg-color, #ffffff)',
+      backgroundColor: '#000000',
     }}>
       <div style={{ textAlign: 'center' }}>
         <div
           style={{
             width: '40px',
             height: '40px',
-            border: '4px solid var(--tg-theme-hint-color, #e0e0e0)',
-            borderTop: '4px solid var(--tg-theme-button-color, #2481cc)',
+            border: '4px solid #333333',
+            borderTop: '4px solid #0a84ff',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite',
             margin: '0 auto 16px',
           }}
         />
-        <p style={{ color: 'var(--tg-theme-text-color, #000000)' }}>Загрузка...</p>
+        <p style={{ color: '#ffffff' }}>Загрузка...</p>
       </div>
       <style>{`
         @keyframes spin {
