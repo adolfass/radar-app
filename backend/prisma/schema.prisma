@@ -322,9 +322,13 @@ model Meeting {
   actualAt        DateTime? @map("actual_at")
   status          String    @default("planned") // planned, in_progress, completed, cancelled
   anchors         String?   // JSON: conversation anchors/topics to discuss
+  whatCanIGive    String?   @map("what_can_i_give") // what I can give to this contact
   notes           String?   // notes during meeting
   outcomes        String?   // JSON: outcomes, action items, follow-ups
   followUpDate    DateTime? @map("follow_up_date")
+  // Emotional reflection (Bezrukov enhancements)
+  emotionalAfter  String?   @map("emotional_after") // DRAINED | NEUTRAL | ENERGIZED
+  reflectionNote  String?   @map("reflection_note") // user's reflection on the meeting
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 

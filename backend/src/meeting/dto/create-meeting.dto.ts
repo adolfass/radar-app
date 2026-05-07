@@ -26,4 +26,9 @@ export class CreateMeetingDto {
   @IsString()
   @IsOptional()
   anchors?: string;
+
+  @ApiPropertyOptional({ description: 'What I can give to this contact' })
+  @IsString()
+  @IsOptional()
+  whatCanIGive?: string;
 }

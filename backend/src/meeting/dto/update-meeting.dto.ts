@@ -2,6 +2,12 @@ import { IsString, IsOptional, IsEnum } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { MeetingStatus } from './create-meeting.dto';
 
+export enum MeetingEmotion {
+  DRAINED = 'DRAINED',
+  NEUTRAL = 'NEUTRAL',
+  ENERGIZED = 'ENERGIZED',
+}
+
 export class UpdateMeetingDto {
   @ApiPropertyOptional({ description: 'Meeting status' })
   @IsEnum(MeetingStatus)
@@ -25,4 +31,14 @@ export class UpdateMeetingDto {
   @ApiPropertyOptional({ description: 'Actual meeting date/time' })
   @IsOptional()
   actualAt?: Date;
+
+  @ApiPropertyOptional({ description: 'Emotional state after meeting' })
+  @IsEnum(MeetingEmotion)
+  @IsOptional()
+  emotionalAfter?: MeetingEmotion;
+
+  @ApiPropertyOptional({ description: 'Reflection note after meeting' })
+  @IsString()
+  @IsOptional()
+  reflectionNote?: string;
 }

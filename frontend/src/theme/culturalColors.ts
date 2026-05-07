@@ -1,3 +1,63 @@
+export const OIS_COLORS = {
+  DANGEROUS: {
+    color: '#ef4444',
+    glow: 'rgba(239, 68, 68, 0.6)',
+    label: 'Опасен',
+    priority: 3,
+  },
+  INTERESTING: {
+    color: '#eab308',
+    glow: 'rgba(234, 179, 8, 0.6)',
+    label: 'Интересен',
+    priority: 2,
+  },
+  COMPLEX: {
+    color: '#64748b',
+    glow: 'rgba(100, 116, 139, 0.6)',
+    label: 'Сложен',
+    priority: 1,
+  },
+};
+
+const OIS_KEY_MAP: Record<string, keyof typeof OIS_COLORS> = {
+  ОПАСЕН: 'DANGEROUS',
+  ОПАСНА: 'DANGEROUS',
+  DANGEROUS: 'DANGEROUS',
+  ОПАСНЫЙ: 'DANGEROUS',
+  ИНТЕРЕСЕН: 'INTERESTING',
+  ИНТЕРЕСНА: 'INTERESTING',
+  INTERESTING: 'INTERESTING',
+  ИНТЕРЕСНЫЙ: 'INTERESTING',
+  СЛОЖЕН: 'COMPLEX',
+  СЛОЖНА: 'COMPLEX',
+  COMPLEX: 'COMPLEX',
+  СЛОЖНЫЙ: 'COMPLEX',
+};
+
+export function getOisTag(privateMeta: Record<string, unknown> | null | undefined): string | null {
+  if (!privateMeta) return null;
+  const oisValue = privateMeta['оис'] ?? privateMeta['ois'] ?? privateMeta['ОИС'];
+  if (!oisValue) return null;
+  const normalized = String(oisValue).toUpperCase().trim();
+  const mapped = OIS_KEY_MAP[normalized];
+  return mapped || null;
+}
+
+export function getOisColor(oisTag: string | null): string {
+  if (!oisTag) return '#8e8e93';
+  return OIS_COLORS[oisTag as keyof typeof OIS_COLORS]?.color || '#8e8e93';
+}
+
+export function getOisGlow(oisTag: string | null): string {
+  if (!oisTag) return 'rgba(142, 142, 147, 0.4)';
+  return OIS_COLORS[oisTag as keyof typeof OIS_COLORS]?.glow || 'rgba(142, 142, 147, 0.4)';
+}
+
+export function getOisLabel(oisTag: string | null): string {
+  if (!oisTag) return '';
+  return OIS_COLORS[oisTag as keyof typeof OIS_COLORS]?.label || oisTag;
+}
+
 export const CULTURAL_ARCHETYPES = {
   POMEGRANATE: { 
     color: '#C41E3A',

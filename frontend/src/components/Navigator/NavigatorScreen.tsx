@@ -9,6 +9,7 @@ interface ChecklistState {
   contactsAdded: boolean;
   graphViewed: boolean;
   firstMeeting: boolean;
+  firstContactRule: boolean;
 }
 
 const STORAGE_KEY = 'radar-navigator-checklist';
@@ -20,7 +21,7 @@ function getChecklist(): ChecklistState {
   } catch {
     // ignore parse errors
   }
-  return { bqgSet: false, contactsAdded: false, graphViewed: false, firstMeeting: false };
+  return { bqgSet: false, contactsAdded: false, graphViewed: false, firstMeeting: false, firstContactRule: false };
 }
 
 function saveChecklist(checklist: ChecklistState) {
@@ -83,6 +84,10 @@ export function NavigatorScreen() {
   const completedCount = Object.values(checklist).filter(Boolean).length;
   const totalSteps = Object.keys(checklist).length;
 
+  const handleFirstContactRuleChange = (checked: boolean) => {
+    updateChecklist('firstContactRule', checked);
+  };
+
   const abVariantNames: Record<string, { icon: string; name: string }> = {
     navigator: { icon: '🎯', name: 'Навигатор' },
     helper: { icon: '🧭', name: 'Помощник' },
@@ -130,6 +135,32 @@ export function NavigatorScreen() {
           </div>
         </div>
       </header>
+
+      <div style={{
+        margin: '16px',
+        backgroundColor: 'rgba(251, 191, 36, 0.08)',
+        border: '1px solid rgba(251, 191, 36, 0.25)',
+        borderRadius: '12px',
+        padding: '16px',
+      }}>
+        <label style={{ display: 'flex', gap: '12px', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={checklist.firstContactRule}
+            onChange={(e) => handleFirstContactRuleChange(e.target.checked)}
+            style={{ width: '22px', height: '22px', accentColor: '#fbbf24', flexShrink: 0, marginTop: '2px' }}
+          />
+          <div>
+            <p style={{ color: '#fbbf24', fontWeight: '700', fontSize: '15px', margin: 0, marginBottom: '4px' }}>
+              Правило Первого Контакта
+            </p>
+            <p style={{ color: '#d1d5db', fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
+              Прежде чем добавить новый контакт, спросите себя: <em>«Хочу ли я встретиться с этим человеком?»</em><br/>
+              Если нет — не добавляйте.
+            </p>
+          </div>
+        </label>
+      </div>
 
       <AccordionSection
         id="welcome"

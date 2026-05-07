@@ -47,6 +47,7 @@ export class MeetingService {
         location: createDto.location,
         scheduledAt: createDto.scheduledAt,
         anchors: createDto.anchors,
+        whatCanIGive: createDto.whatCanIGive,
         status: 'planned',
       },
     });
@@ -67,6 +68,8 @@ export class MeetingService {
         outcomes: updateDto.outcomes,
         followUpDate: updateDto.followUpDate,
         actualAt: updateDto.actualAt,
+        emotionalAfter: updateDto.emotionalAfter,
+        reflectionNote: updateDto.reflectionNote,
       },
     });
 

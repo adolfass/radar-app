@@ -15,9 +15,12 @@ export function MeetingFlow() {
   const [location, setLocation] = useState('');
   const [scheduledAt, setScheduledAt] = useState('');
   const [anchors, setAnchors] = useState('');
+  const [whatCanIGive, setWhatCanIGive] = useState('');
   const [notes, setNotes] = useState('');
   const [outcomes, setOutcomes] = useState('');
   const [followUpDate, setFollowUpDate] = useState('');
+  const [emotionalAfter, setEmotionalAfter] = useState<'DRAINED' | 'NEUTRAL' | 'ENERGIZED' | ''>('');
+  const [reflectionNote, setReflectionNote] = useState('');
 
   useEffect(() => {
     loadData();
@@ -48,6 +51,7 @@ export function MeetingFlow() {
         location: location || undefined,
         scheduledAt: scheduledAt || undefined,
         anchors: anchors || undefined,
+        whatCanIGive: whatCanIGive || undefined,
       });
 
       setSelectedMeeting(meeting.data);
@@ -80,6 +84,8 @@ export function MeetingFlow() {
         notes: notes || undefined,
         outcomes: outcomes || undefined,
         followUpDate: followUpDate || undefined,
+        emotionalAfter: emotionalAfter || undefined,
+        reflectionNote: reflectionNote || undefined,
       });
 
       alert('Встреча завершена! Контакт обновлён.');
@@ -97,9 +103,12 @@ export function MeetingFlow() {
     setLocation('');
     setScheduledAt('');
     setAnchors('');
+    setWhatCanIGive('');
     setNotes('');
     setOutcomes('');
     setFollowUpDate('');
+    setEmotionalAfter('');
+    setReflectionNote('');
   };
 
   const getContactName = (contactId: number) => {
@@ -275,12 +284,24 @@ export function MeetingFlow() {
             />
           </label>
 
+          {/* What can I give */}
+          <label style={styles.label}>
+            Что я могу дать?
+            <textarea
+              value={whatCanIGive}
+              onChange={(e) => setWhatCanIGive(e.target.value)}
+              style={{ ...styles.input, ...styles.textarea }}
+              placeholder="• Контакты, рекомендации&#10;• Экспертиза, совет&#10;• Ресурсы, возможности"
+              rows={3}
+            />
+          </label>
+
           <button
             onClick={handleCreateMeeting}
-            disabled={!selectedContact}
+            disabled={!selectedContact || !whatCanIGive.trim()}
             style={{
               ...styles.submitBtn,
-              opacity: selectedContact ? 1 : 0.5,
+              opacity: selectedContact && whatCanIGive.trim() ? 1 : 0.5,
             }}
           >
             Сохранить и начать подготовку
@@ -378,6 +399,42 @@ export function MeetingFlow() {
           />
         </label>
 
+        <div style={styles.emotionSection}>
+          <p style={styles.emotionLabel}>Как вы себя чувствуете после встречи?</p>
+          <div style={styles.emotionButtons}>
+            {([
+              { value: 'DRAINED', label: 'Измотан', emoji: '😩', color: '#ef4444' },
+              { value: 'NEUTRAL', label: 'Нормально', emoji: '😐', color: '#6b7280' },
+              { value: 'ENERGIZED', label: 'Энергичен', emoji: '⚡', color: '#22c55e' },
+            ] as const).map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setEmotionalAfter(opt.value)}
+                style={{
+                  ...styles.emotionBtn,
+                  backgroundColor: emotionalAfter === opt.value ? `${opt.color}20` : 'var(--radar-surface-elevated)',
+                  borderColor: emotionalAfter === opt.value ? opt.color : 'var(--radar-border)',
+                  color: emotionalAfter === opt.value ? opt.color : 'var(--radar-text-secondary)',
+                }}
+              >
+                <span style={{ fontSize: '20px' }}>{opt.emoji}</span>
+                <span style={{ fontSize: '11px', marginTop: '2px' }}>{opt.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <label style={styles.label}>
+          Рефлексия
+          <textarea
+            value={reflectionNote}
+            onChange={(e) => setReflectionNote(e.target.value)}
+            style={{ ...styles.input, ...styles.textarea }}
+            placeholder="Что я узнал? Что сделаю иначе?"
+            rows={3}
+          />
+        </label>
+
         <button onClick={handleCompleteMeeting} style={styles.completeBtn}>
           ✓ Завершить встречу
         </button>
@@ -444,6 +501,31 @@ const styles: Record<string, React.CSSProperties> = {
   completeBtn: {
     padding: '16px', backgroundColor: 'var(--radar-success)',
     color: '#fff', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600',
+  },
+  emotionSection: {
+    marginBottom: '16px',
+  },
+  emotionLabel: {
+    fontSize: '14px',
+    color: 'var(--radar-text-secondary)',
+    marginBottom: '10px',
+    fontWeight: '500',
+  },
+  emotionButtons: {
+    display: 'flex',
+    gap: '8px',
+  },
+  emotionBtn: {
+    flex: 1,
+    padding: '12px 8px',
+    border: '1px solid var(--radar-border)',
+    borderRadius: '12px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '4px',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
   },
   meetingHeader: { marginBottom: '24px' },
   anchorsBox: {

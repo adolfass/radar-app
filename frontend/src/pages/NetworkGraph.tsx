@@ -3,7 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import ForceGraph2D from 'react-force-graph-2d';
 import { api } from '../lib/api';
 import { BottomNav } from '../components/BottomNav';
-import { CULTURAL_ARCHETYPES, getArchetypeColor, getArchetypeLabel } from '../theme/culturalColors';
+import {
+  CULTURAL_ARCHETYPES,
+  getArchetypeColor,
+  getArchetypeLabel,
+  getOisTag,
+  getOisColor,
+  OIS_COLORS,
+} from '../theme/culturalColors';
 
 interface GraphNode {
   id: number;
@@ -12,6 +19,7 @@ interface GraphNode {
   archetype: string | null;
   size: number;
   val: number;
+  privateMeta?: Record<string, unknown> | null;
   x?: number;
   y?: number;
 }
@@ -65,7 +73,8 @@ export function NetworkGraph() {
 
     fgRef.current.nodeColor((n: GraphNode) => {
       if (node && n.id === node.id) return '#ffffff';
-      return getArchetypeColor(n.archetype);
+      const oisTag = getOisTag(n.privateMeta ?? null);
+      return oisTag ? getOisColor(oisTag) : getArchetypeColor(n.archetype);
     });
 
     fgRef.current.linkWidth((l: GraphLink) => {
@@ -102,6 +111,12 @@ export function NetworkGraph() {
         <button onClick={() => navigate(-1)} style={styles.backBtn}>←</button>
         <h1 style={styles.title}>Граф сети</h1>
         <div style={styles.legend}>
+          {Object.entries(OIS_COLORS).map(([key, val]) => (
+            <span key={key} style={styles.legendItem}>
+              <span style={{ ...styles.legendDot, backgroundColor: val.color }} />
+              {val.label}
+            </span>
+          ))}
           {archetypeEntries.map(([key, val]) => (
             <span key={key} style={styles.legendItem}>
               <span style={{ ...styles.legendDot, backgroundColor: val.color }} />
@@ -115,10 +130,16 @@ export function NetworkGraph() {
         <ForceGraph2D
           ref={fgRef}
           graphData={graphData}
-          nodeColor={(node: GraphNode) => getArchetypeColor(node.archetype)}
+          nodeColor={(node: GraphNode) => {
+            const oisTag = getOisTag(node.privateMeta ?? null);
+            return oisTag ? getOisColor(oisTag) : getArchetypeColor(node.archetype);
+          }}
           nodeRelSize={6}
           nodeVal={(node: GraphNode) => node.val}
-          nodeLabel={(node: GraphNode) => node.label}
+          nodeLabel={(node: GraphNode) => {
+            const oisTag = getOisTag(node.privateMeta ?? null);
+            return oisTag ? `${node.label} [${oisTag}]` : node.label;
+          }}
           linkWidth={(link: GraphLink) => link.value}
           linkColor={() => 'rgba(140,140,140,0.3)'}
           backgroundColor="#000000"
@@ -134,13 +155,23 @@ export function NetworkGraph() {
             <div
               style={{
                 ...styles.nodeInfoDot,
-                backgroundColor: getArchetypeColor(selectedNode.archetype),
+                backgroundColor: (() => {
+                  const oisTag = getOisTag(selectedNode.privateMeta ?? null);
+                  return oisTag ? getOisColor(oisTag) : getArchetypeColor(selectedNode.archetype);
+                })(),
               }}
             />
             <span style={styles.nodeInfoName}>{selectedNode.label}</span>
-            {selectedNode.archetype && (
-              <span style={styles.archetypeBadge}>{getArchetypeLabel(selectedNode.archetype)}</span>
-            )}
+            {(() => {
+              const oisTag = getOisTag(selectedNode.privateMeta ?? null);
+              if (oisTag) {
+                return <span style={styles.oisBadge}>{getOisTag(selectedNode.privateMeta ?? null)}</span>;
+              }
+              if (selectedNode.archetype) {
+                return <span style={styles.archetypeBadge}>{getArchetypeLabel(selectedNode.archetype)}</span>;
+              }
+              return null;
+            })()}
             <button onClick={() => setSelectedNode(null)} style={styles.closeBtn}>✕</button>
           </div>
           <div style={styles.nodeInfoActions}>
@@ -256,6 +287,15 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundColor: 'var(--radar-surface-elevated)',
     color: 'var(--radar-text-secondary)',
     border: '1px solid var(--radar-border)',
+  },
+  oisBadge: {
+    fontSize: '11px',
+    fontWeight: '600',
+    padding: '3px 8px',
+    borderRadius: '10px',
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    color: '#ef4444',
+    border: '1px solid rgba(239, 68, 68, 0.3)',
   },
   closeBtn: {
     background: 'none',

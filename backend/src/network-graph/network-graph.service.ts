@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EncryptionService } from '../encryption/encryption.service';
 
 export interface GraphNode {
   id: number;
@@ -8,6 +9,7 @@ export interface GraphNode {
   archetype: string | null;
   size: number;
   val: number;
+  privateMeta?: Record<string, unknown> | null;
 }
 
 export interface GraphLink {
@@ -24,7 +26,10 @@ export interface GraphData {
 
 @Injectable()
 export class NetworkGraphService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private encryption: EncryptionService,
+  ) {}
 
   async getNetworkGraph(userId: number): Promise<GraphData> {
     const contacts = await this.prisma.contact.findMany({
@@ -52,6 +57,15 @@ export class NetworkGraphService {
       if (totalTrust > 50) group = 'support';
       else if (totalTrust > 10) group = 'productivity';
 
+      let privateMeta: Record<string, unknown> | null = null;
+      if (contact.privateMeta) {
+        try {
+          privateMeta = this.encryption.decryptJSON(contact.privateMeta);
+        } catch {
+          privateMeta = null;
+        }
+      }
+
       return {
         id: contact.id,
         label: contact.businessName || 'Unknown',
@@ -59,6 +73,7 @@ export class NetworkGraphService {
         archetype: contact.archetype,
         size: Math.max(3, Math.min(15, 3 + deltas.length * 0.5)),
         val: Math.max(1, Math.min(10, 1 + Math.abs(totalTrust) * 0.1)),
+        privateMeta,
       };
     });
 
