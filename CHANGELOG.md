@@ -1,5 +1,31 @@
 # CHANGELOG - RADAR Strategic Networking
 
+## [1.0.1] - 2026-05-11
+
+### Исправленные проблемы
+
+#### Telegram бот через SOCKS прокси
+- **Проблема**: Сервер в России не может достучаться до `api.telegram.org` (блокировка)
+- **Решение**: Добавлена поддержка SOCKS5 прокси через пакет `socks-proxy-agent`
+- **Изменения**:
+  - `backend/src/telegram/telegram.service.ts` — использует `socks-proxy-agent@6.0.0` для маршрутизации запросов через SOCKS5 прокси
+  - Конфигурация прокси в `.env`: `SOCKS_PROXY_HOST=127.0.0.1`, `SOCKS_PROXY_PORT=1080`
+
+#### Glitchtip мониторинг ошибок
+- **Проблема**: Glitchtip не мог подключиться к PostgreSQL внутри Docker сети
+- **Решение**: Исправлен порт подключения с 5433 на 5432 (внутренний порт контейнера)
+- **Изменения**:
+  - `docker-compose.yml` — `DATABASE_URL=postgresql://radar:radar_password@radar_postgres:5432/radar_db`
+  - `docker-compose.yml` — `GLITCHTIP_DOMAIN=https://radar.strateg.space/sentry`
+
+### Требования к окружению
+
+- SOCKS5 прокси на `127.0.0.1:1080` (туннель на芬兰сервер)
+- PostgreSQL внутри Docker сети использует порт 5432, снаружи — 5433
+- Glitchtip доступен по пути `/sentry/` (интеграция с Sentry/Glitchtip SDK)
+
+---
+
 ## [1.0.0] - 2026-05-06
 
 ### Зафиксированная рабочая версия

@@ -23,9 +23,9 @@ services:
     ports:
       - "8001:8000"
     environment:
-      - DATABASE_URL=postgresql://radar:radar_password@radar_postgres:5433/radar_db
+      - DATABASE_URL=postgresql://radar:radar_password@radar_postgres:5432/radar_db
       - SECRET_KEY=glitchtip_secret_key_123
-      - GLITCHTIP_DOMAIN=http://localhost:8001
+      - GLITCHTIP_DOMAIN=https://radar.strateg.space/sentry
     depends_on:
       - postgres
     logging:
